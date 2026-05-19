@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Categoria modulo (compare nelle preferenze utente) -->
+        <record id="module_category_crocevia" model="ir.module.category">
+            <field name="name">Crocevia dei Mondi</field>
+            <field name="description">Gestione tesseramento e libri sociali del Crocevia.</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Gruppo principale: direttivo del Crocevia -->
+        <record id="group_crocevia_direttivo" model="res.groups">
+            <field name="name">Direttivo Crocevia</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Membri del direttivo: gestiscono soci, cariche, richieste di iscrizione e verbali.</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+</odoo>

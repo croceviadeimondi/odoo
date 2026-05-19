@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menu radice -->
+    <menuitem id="menu_crocevia_root"
+              name="Tesseramento"
+              sequence="20"/>
+
+    <!-- Sottomenu -->
+    <menuitem id="menu_crocevia_soci"
+              name="Soci"
+              parent="menu_crocevia_root"
+              action="action_soci"
+              sequence="10"/>
+
+    <menuitem id="menu_crocevia_richieste"
+              name="Richieste iscrizione"
+              parent="menu_crocevia_root"
+              action="action_crocevia_richiesta"
+              sequence="20"/>
+
+    <menuitem id="menu_crocevia_cariche"
+              name="Cariche direttive"
+              parent="menu_crocevia_root"
+              action="action_crocevia_carica"
+              sequence="30"/>
+
+    <menuitem id="menu_crocevia_verbali"
+              name="Verbali"
+              parent="menu_crocevia_root"
+              action="action_crocevia_verbale"
+              sequence="40"/>
+
+</odoo>

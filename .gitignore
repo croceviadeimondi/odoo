@@ -2,8 +2,9 @@
 .env
 config/odoo.conf
 
-# Dati locali / log
-data/
+# Dati locali / log (solo /data alla radice del repo — NON le cartelle data/
+# dei moduli Odoo, che contengono XML versionati)
+/data/
 *.log
 
 # Python / Odoo build artifacts

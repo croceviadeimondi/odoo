@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_richiesta_list" model="ir.ui.view">
+        <field name="name">crocevia.richiesta.iscrizione.list</field>
+        <field name="model">crocevia.richiesta.iscrizione</field>
+        <field name="arch" type="xml">
+            <list decoration-info="state == 'nuova'"
+                  decoration-muted="state == 'rifiutata'"
+                  decoration-success="state == 'approvata'">
+                <field name="create_date" string="Ricevuta il"/>
+                <field name="nome"/>
+                <field name="cognome"/>
+                <field name="email"/>
+                <field name="categoria_richiesta"/>
+                <field name="state" widget="badge"
+                       decoration-info="state == 'nuova'"
+                       decoration-success="state == 'approvata'"
+                       decoration-muted="state == 'rifiutata'"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_crocevia_richiesta_form" model="ir.ui.view">
+        <field name="name">crocevia.richiesta.iscrizione.form</field>
+        <field name="model">crocevia.richiesta.iscrizione</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_approva" type="object"
+                            string="Approva" class="oe_highlight"
+                            invisible="state != 'nuova'"
+                            confirm="Confermi l'approvazione? Verrà creato un nuovo socio con numero progressivo."/>
+                    <button name="action_rifiuta" type="object"
+                            string="Rifiuta"
+                            invisible="state != 'nuova'"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="nuova,approvata,rifiutata"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_view_partner" type="object"
+                                class="oe_stat_button" icon="fa-user"
+                                invisible="not partner_id">
+                            <div class="o_field_widget o_stat_info">
+                                <span class="o_stat_text">Socio creato</span>
+                            </div>
+                        </button>
+                    </div>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Anagrafica">
+                            <field name="nome"/>
+                            <field name="cognome"/>
+                            <field name="data_nascita"/>
+                            <field name="luogo_nascita"/>
+                            <field name="codice_fiscale"/>
+                        </group>
+                        <group string="Contatti">
+                            <field name="email" widget="email"/>
+                            <field name="telefono" widget="phone"/>
+                            <field name="indirizzo"/>
+                            <field name="cap"/>
+                            <field name="citta"/>
+                            <field name="provincia"/>
+                        </group>
+                    </group>
+                    <group>
+                        <group>
+                            <field name="categoria_richiesta"/>
+                        </group>
+                        <group>
+                            <field name="consenso_privacy" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Messaggio del richiedente">
+                        <field name="messaggio" nolabel="1"/>
+                    </group>
+                    <group string="Motivo del rifiuto"
+                           invisible="state != 'rifiutata'">
+                        <field name="motivo_rifiuto" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crocevia_richiesta_search" model="ir.ui.view">
+        <field name="name">crocevia.richiesta.iscrizione.search</field>
+        <field name="model">crocevia.richiesta.iscrizione</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="nome"/>
+                <field name="cognome"/>
+                <field name="email"/>
+                <filter string="Nuove" name="filter_nuove"
+                        domain="[('state', '=', 'nuova')]"/>
+                <filter string="Approvate" name="filter_approvate"
+                        domain="[('state', '=', 'approvata')]"/>
+                <filter string="Rifiutate" name="filter_rifiutate"
+                        domain="[('state', '=', 'rifiutata')]"/>
+                <group expand="0" string="Raggruppa per">
+                    <filter string="Stato" name="group_state"
+                            context="{'group_by': 'state'}"/>
+                    <filter string="Categoria richiesta" name="group_categoria"
+                            context="{'group_by': 'categoria_richiesta'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_crocevia_richiesta" model="ir.actions.act_window">
+        <field name="name">Richieste iscrizione</field>
+        <field name="res_model">crocevia.richiesta.iscrizione</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_nuove': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessuna richiesta di iscrizione al momento.
+            </p>
+            <p>
+                Le richieste arrivano automaticamente dal form pubblico del sito
+                (rotta <code>/iscrizione</code>).
+            </p>
+        </field>
+    </record>
+
+</odoo>

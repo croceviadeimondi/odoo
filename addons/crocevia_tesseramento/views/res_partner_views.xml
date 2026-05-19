@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Estensione del form contatto: header + tab "Socio" -->
+    <record id="view_res_partner_form_inherit_crocevia" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.crocevia</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//sheet" position="before">
+                <header>
+                    <button name="action_attiva_socio" type="object"
+                            string="Attiva socio" class="oe_highlight"
+                            invisible="stato_socio == 'attivo'"/>
+                    <button name="action_cessa_socio" type="object"
+                            string="Cessa socio"
+                            invisible="stato_socio == 'cessato' or not is_socio"
+                            confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
+                    <field name="stato_socio" widget="statusbar"
+                           invisible="not is_socio"
+                           statusbar_visible="richiesta,attivo,cessato"/>
+                </header>
+            </xpath>
+
+            <xpath expr="//notebook" position="inside">
+                <page string="Socio" name="socio">
+                    <group>
+                        <group>
+                            <field name="is_socio"/>
+                            <field name="numero_socio"/>
+                            <field name="categoria_socio"/>
+                        </group>
+                        <group>
+                            <field name="data_iscrizione"/>
+                            <field name="data_cessazione"
+                                   invisible="stato_socio != 'cessato'"/>
+                            <field name="carica_attuale" readonly="1"/>
+                        </group>
+                    </group>
+                    <separator string="Cariche direttive (storico)"/>
+                    <field name="carica_ids">
+                        <list editable="bottom">
+                            <field name="ruolo"/>
+                            <field name="data_nomina"/>
+                            <field name="data_scadenza"/>
+                            <field name="is_attuale" readonly="1" optional="show"/>
+                            <field name="note" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Filtri e raggruppamenti su contatti per gestione soci -->
+    <record id="view_res_partner_search_inherit_crocevia" model="ir.ui.view">
+        <field name="name">res.partner.search.inherit.crocevia</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Soci" name="filter_soci"
+                        domain="[('is_socio', '=', True)]"/>
+                <filter string="Soci attivi" name="filter_attivi"
+                        domain="[('is_socio', '=', True), ('stato_socio', '=', 'attivo')]"/>
+                <filter string="Richieste in attesa" name="filter_richiesta"
+                        domain="[('is_socio', '=', True), ('stato_socio', '=', 'richiesta')]"/>
+                <filter string="Soci cessati" name="filter_cessati"
+                        domain="[('is_socio', '=', True), ('stato_socio', '=', 'cessato')]"/>
+                <group expand="0" string="Raggruppa per">
+                    <filter string="Categoria socio" name="group_categoria"
+                            context="{'group_by': 'categoria_socio'}"/>
+                    <filter string="Stato socio" name="group_stato"
+                            context="{'group_by': 'stato_socio'}"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista lista soci (dedicata, mostra colonne rilevanti) -->
+    <record id="view_res_partner_socio_list" model="ir.ui.view">
+        <field name="name">res.partner.socio.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Soci">
+                <field name="numero_socio"/>
+                <field name="name"/>
+                <field name="categoria_socio"/>
+                <field name="carica_attuale" optional="show"/>
+                <field name="stato_socio" widget="badge"
+                       decoration-info="stato_socio == 'richiesta'"
+                       decoration-success="stato_socio == 'attivo'"
+                       decoration-muted="stato_socio == 'cessato'"/>
+                <field name="data_iscrizione" optional="show"/>
+                <field name="email" optional="hide"/>
+                <field name="phone" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Azione "Soci" filtrata su is_socio=True -->
+    <record id="action_soci" model="ir.actions.act_window">
+        <field name="name">Soci</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('is_socio', '=', True)]</field>
+        <field name="context">{
+            'default_is_socio': True,
+            'default_company_type': 'person',
+            'search_default_filter_attivi': 1,
+        }</field>
+        <field name="view_id" ref="view_res_partner_socio_list"/>
+        <field name="search_view_id" ref="base.view_res_partner_filter"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessun socio ancora registrato.
+            </p>
+            <p>
+                I soci si creano qui, oppure approvando una
+                <a href="#" data-menu-xmlid="crocevia_tesseramento.menu_crocevia_richieste">richiesta di iscrizione</a>.
+            </p>
+        </field>
+    </record>
+
+</odoo>

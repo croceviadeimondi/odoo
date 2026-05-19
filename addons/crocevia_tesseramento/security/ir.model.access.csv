@@ -1,0 +1,6 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_crocevia_carica_direttivo,crocevia.carica direttivo,model_crocevia_carica,group_crocevia_direttivo,1,1,1,1
+access_crocevia_richiesta_direttivo,crocevia.richiesta.iscrizione direttivo,model_crocevia_richiesta_iscrizione,group_crocevia_direttivo,1,1,1,1
+access_crocevia_verbale_direttivo,crocevia.verbale direttivo,model_crocevia_verbale,group_crocevia_direttivo,1,1,1,1
+access_crocevia_carica_user_ro,crocevia.carica utenti interni readonly,model_crocevia_carica,base.group_user,1,0,0,0
+access_crocevia_verbale_user_ro,crocevia.verbale utenti interni readonly,model_crocevia_verbale,base.group_user,1,0,0,0

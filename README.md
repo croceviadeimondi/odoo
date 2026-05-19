@@ -77,11 +77,17 @@ Per la localizzazione italiana, in fase di creazione del database scegli
 ## Roadmap
 
 - [x] Infrastruttura Docker (Odoo 18 + PostgreSQL)
-- [ ] Creazione database `crocevia` e configurazione iniziale
-- [ ] Configurazione tesseramento (prodotti quota associativa, categorie soci)
-- [ ] Configurazione contabilità (piano dei conti, registri)
-- [ ] Eventuale modulo custom `crocevia_tesseramento` per esigenze
-      specifiche del libro soci ETS / RUNTS
+- [x] Modulo custom **[`crocevia_tesseramento`](addons/crocevia_tesseramento/README.md)**:
+      registro soci con numero progressivo e categoria, cariche direttive con
+      storico mandati, form pubblico di richiesta iscrizione, archivio verbali
+- [ ] Creazione database `crocevia` e configurazione iniziale (UI Odoo)
+- [ ] Configurazione tesseramento: prodotto quota associativa 2026 (10 €,
+      anno solare), allineamento sequenza numero socio col libro cartaceo
+- [ ] Configurazione contabilità: giornali Cassa/Banca, piano dei conti
+      italiano, conti dedicati (Quote associative, Erogazioni liberali)
+- [ ] Pubblicazione voce di menu "Iscriviti" sul sito (→ `/iscrizione`)
+- [ ] Import elenco soci esistente dal foglio di calcolo
+- [ ] Reverse proxy HTTPS + backup periodico (prima del go-live pubblico)
 
 ## Note
 

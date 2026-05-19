@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Form pubblico richiesta iscrizione -->
+    <template id="iscrizione_form_template" name="Iscrizione — Crocevia dei Mondi">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <section class="s_text_block py-5">
+                    <div class="container">
+                        <h1>Richiedi il tesseramento</h1>
+                        <p class="lead">
+                            Compila il modulo per chiedere di diventare socio
+                            del Crocevia dei Mondi APS. La quota associativa è
+                            di <strong>10€ per anno solare</strong>. Il
+                            direttivo valuterà la tua richiesta e ti
+                            risponderà via email.
+                        </p>
+
+                        <div t-if="error" class="alert alert-danger" role="alert">
+                            <t t-out="error"/>
+                        </div>
+
+                        <form action="/iscrizione/invia" method="post" class="row g-3">
+                            <input type="hidden" name="csrf_token"
+                                   t-att-value="request.csrf_token()"/>
+
+                            <!-- Honeypot anti-spam -->
+                            <div style="position:absolute;left:-9999px;top:-9999px;"
+                                 aria-hidden="true">
+                                <label>
+                                    Lascia vuoto questo campo:
+                                    <input type="text" name="website"
+                                           tabindex="-1" autocomplete="off"/>
+                                </label>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Nome *</label>
+                                <input type="text" name="nome" class="form-control"
+                                       required="required"
+                                       t-att-value="values.get('nome', '')"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Cognome *</label>
+                                <input type="text" name="cognome" class="form-control"
+                                       required="required"
+                                       t-att-value="values.get('cognome', '')"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Email *</label>
+                                <input type="email" name="email" class="form-control"
+                                       required="required"
+                                       t-att-value="values.get('email', '')"/>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Telefono</label>
+                                <input type="tel" name="telefono" class="form-control"
+                                       t-att-value="values.get('telefono', '')"/>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label class="form-label">Data di nascita</label>
+                                <input type="date" name="data_nascita" class="form-control"
+                                       t-att-value="values.get('data_nascita', '')"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Luogo di nascita</label>
+                                <input type="text" name="luogo_nascita" class="form-control"
+                                       t-att-value="values.get('luogo_nascita', '')"/>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label">Codice fiscale</label>
+                                <input type="text" name="codice_fiscale" maxlength="16"
+                                       class="form-control text-uppercase"
+                                       t-att-value="values.get('codice_fiscale', '')"/>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Indirizzo</label>
+                                <input type="text" name="indirizzo" class="form-control"
+                                       t-att-value="values.get('indirizzo', '')"/>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">CAP</label>
+                                <input type="text" name="cap" maxlength="5"
+                                       class="form-control"
+                                       t-att-value="values.get('cap', '')"/>
+                            </div>
+                            <div class="col-md-7">
+                                <label class="form-label">Città</label>
+                                <input type="text" name="citta" class="form-control"
+                                       t-att-value="values.get('citta', '')"/>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label">Prov.</label>
+                                <input type="text" name="provincia" maxlength="2"
+                                       class="form-control text-uppercase"
+                                       t-att-value="values.get('provincia', '')"/>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label">Categoria richiesta</label>
+                                <select name="categoria_richiesta" class="form-select">
+                                    <option value="volontario">Volontario</option>
+                                    <option value="amministrativo">Amministrativo</option>
+                                </select>
+                            </div>
+
+                            <div class="col-12">
+                                <label class="form-label">Messaggio (facoltativo)</label>
+                                <textarea name="messaggio" class="form-control"
+                                          rows="3"><t t-out="values.get('messaggio', '')"/></textarea>
+                            </div>
+
+                            <div class="col-12">
+                                <div class="form-check">
+                                    <input type="checkbox" name="consenso_privacy"
+                                           value="1" id="consenso_privacy"
+                                           class="form-check-input"
+                                           required="required"/>
+                                    <label class="form-check-label" for="consenso_privacy">
+                                        Acconsento al trattamento dei miei dati personali
+                                        per le finalità associative del Crocevia dei Mondi APS,
+                                        ai sensi del GDPR (Reg. UE 2016/679). *
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="col-12">
+                                <button type="submit" class="btn btn-primary">
+                                    Invia richiesta
+                                </button>
+                            </div>
+
+                            <p class="text-muted small mb-0">* campi obbligatori</p>
+                        </form>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+    <!-- Pagina di conferma post-invio -->
+    <template id="iscrizione_conferma_template" name="Iscrizione — Conferma">
+        <t t-call="website.layout">
+            <div id="wrap" class="oe_structure">
+                <section class="s_text_block py-5">
+                    <div class="container">
+                        <h1>Richiesta ricevuta ✓</h1>
+                        <p class="lead">
+                            Grazie! Abbiamo ricevuto la tua richiesta di
+                            tesseramento. Il direttivo del Crocevia dei Mondi
+                            la valuterà nei prossimi giorni e ti contatterà
+                            via email.
+                        </p>
+                        <a href="/" class="btn btn-secondary">Torna alla home</a>
+                    </div>
+                </section>
+            </div>
+        </t>
+    </template>
+
+</odoo>
