@@ -87,5 +87,5 @@ class CroceviaCarica(models.Model):
         ruolo_dict = dict(RUOLO_SELECTION)
         for c in self:
             ruolo_label = ruolo_dict.get(c.ruolo, c.ruolo or '')
-            partner_name = c.partner_id.display_name or '—'
-            c.display_name = "%s — %s" % (ruolo_label, partner_name)
+            partner_name = c.partner_id.display_name or '-'
+            c.display_name = "%s - %s" % (ruolo_label, partner_name)

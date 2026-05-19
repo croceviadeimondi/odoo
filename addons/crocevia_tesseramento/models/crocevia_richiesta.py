@@ -71,7 +71,7 @@ class CroceviaRichiestaIscrizione(models.Model):
         for r in self:
             nome = (r.nome or '').strip()
             cognome = (r.cognome or '').strip()
-            r.name = _("Richiesta — %s %s") % (nome, cognome) if (nome or cognome) \
+            r.name = _("Richiesta - %s %s") % (nome, cognome) if (nome or cognome) \
                 else _("Richiesta")
 
     def action_approva(self):
@@ -102,8 +102,7 @@ class CroceviaRichiestaIscrizione(models.Model):
                 'partner_id': partner.id,
             })
             r.message_post(body=_(
-                "Richiesta approvata — socio creato: <b>%s</b> "
-                "(n. %s)."
+                "Richiesta approvata. Socio creato: <b>%s</b> (n. %s)."
             ) % (partner.display_name, partner.numero_socio))
 
     @staticmethod
