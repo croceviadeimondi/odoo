@@ -1,0 +1,17 @@
+# Segreti e configurazione locale
+.env
+config/odoo.conf
+
+# Dati locali / log
+data/
+*.log
+
+# Python / Odoo build artifacts
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Editor / OS
+.idea/
+.vscode/
+.DS_Store

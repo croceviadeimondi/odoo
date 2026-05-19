@@ -1,0 +1,24 @@
+[options]
+; ───── Crocevia dei Mondi APS — configurazione Odoo ─────
+; Copia questo file in `odoo.conf` e personalizza i valori segnati.
+; `odoo.conf` NON va committato (è in .gitignore).
+
+; Master password: protegge la gestione dei database (crea / elimina / backup).
+; CAMBIALA con una password lunga e casuale.
+admin_passwd = CAMBIA_QUESTA_PASSWORD_MASTER
+
+; Percorso dei moduli custom (cartella ./addons montata dal repo).
+addons_path = /mnt/extra-addons
+
+; La connessione al DB (host, utente, password) arriva dalle variabili
+; d'ambiente definite in docker-compose.yml — non serve ripeterla qui.
+
+; Logging
+log_level = info
+
+; Limiti risorse — adatta in base alla potenza del server.
+limit_time_cpu = 600
+limit_time_real = 1200
+
+; Quando avrai creato il database, scommenta per nascondere gli altri:
+; dbfilter = ^crocevia$

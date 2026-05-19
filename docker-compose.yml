@@ -1,0 +1,36 @@
+name: crocevia-odoo
+
+services:
+  db:
+    image: postgres:16
+    container_name: crocevia-odoo-db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: ${DB_USER:-odoo}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD non impostata — copia .env.example in .env}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  odoo:
+    image: odoo:18.0
+    container_name: crocevia-odoo
+    depends_on:
+      - db
+    ports:
+      - "${ODOO_PORT:-8069}:8069"
+    environment:
+      # L'entrypoint dell'immagine Odoo usa queste variabili per la
+      # connessione al DB (non vanno ripetute in odoo.conf).
+      HOST: db
+      USER: ${DB_USER:-odoo}
+      PASSWORD: ${DB_PASSWORD:?DB_PASSWORD non impostata — copia .env.example in .env}
+    volumes:
+      - odoo-data:/var/lib/odoo          # filestore (allegati, immagini)
+      - ./config:/etc/odoo               # odoo.conf
+      - ./addons:/mnt/extra-addons       # moduli custom del Crocevia
+    restart: unless-stopped
+
+volumes:
+  db-data:
+  odoo-data:
