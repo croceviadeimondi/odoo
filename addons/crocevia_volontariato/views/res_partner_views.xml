@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Tab "Volontariato" sulla scheda contatto. Visibile sempre, ma i
+         campi dettagliati appaiono solo se is_volontario=True. -->
+    <record id="view_res_partner_form_inherit_volontariato"
+            model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.volontariato</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//notebook" position="inside">
+                <page string="Volontariato" name="volontariato">
+                    <group>
+                        <group string="Status">
+                            <field name="is_volontario"/>
+                            <field name="data_inizio_volontariato"
+                                   invisible="not is_volontario"/>
+                            <field name="data_fine_volontariato"
+                                   invisible="not is_volontario"/>
+                        </group>
+                        <group string="Copertura"
+                               invisible="not is_volontario">
+                            <field name="polizza_volontariato"
+                                   placeholder="Es. Reale Mutua n. 12345"/>
+                            <field name="ore_volontariato_anno_corrente"
+                                   readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Mansioni"
+                           invisible="not is_volontario">
+                        <field name="attivita_volontariato_descrizione"
+                               nolabel="1"
+                               placeholder="Es. accoglienza ai laboratori del venerdì, allestimento eventi"/>
+                    </group>
+                    <separator string="Ore prestate"
+                               invisible="not is_volontario"/>
+                    <field name="attivita_volontariato_ids"
+                           invisible="not is_volontario">
+                        <list editable="bottom">
+                            <field name="data"/>
+                            <field name="attivita"/>
+                            <field name="ore" sum="Totale"/>
+                            <field name="project_id" optional="show"/>
+                            <field name="sede_id" optional="hide"/>
+                            <field name="polizza" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Filtri "Volontari" sulla search di res.partner -->
+    <record id="view_res_partner_search_inherit_volontariato"
+            model="ir.ui.view">
+        <field name="name">res.partner.search.inherit.volontariato</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//search" position="inside">
+                <separator/>
+                <filter string="Volontari" name="filter_volontari"
+                        domain="[('is_volontario', '=', True)]"/>
+                <filter string="Volontari attivi" name="filter_volontari_attivi"
+                        domain="[('is_volontario', '=', True),
+                                 '|', ('data_fine_volontariato', '=', False),
+                                      ('data_fine_volontariato', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                <filter string="Ex volontari" name="filter_volontari_ex"
+                        domain="[('is_volontario', '=', True),
+                                 ('data_fine_volontariato', '!=', False),
+                                 ('data_fine_volontariato', '&lt;', context_today().strftime('%Y-%m-%d'))]"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Vista "Libro volontari" dedicata (ordina per data inizio) -->
+    <record id="view_res_partner_volontario_list" model="ir.ui.view">
+        <field name="name">res.partner.volontario.list</field>
+        <field name="model">res.partner</field>
+        <field name="arch" type="xml">
+            <list string="Libro volontari">
+                <field name="name"/>
+                <field name="codice_fiscale" optional="show"/>
+                <field name="data_inizio_volontariato"/>
+                <field name="data_fine_volontariato" optional="show"/>
+                <field name="polizza_volontariato" optional="show"/>
+                <field name="ore_volontariato_anno_corrente"
+                       string="Ore anno"
+                       optional="show"/>
+                <field name="is_socio" optional="show"
+                       widget="boolean_toggle" readonly="1"/>
+                <field name="email" optional="hide"/>
+                <field name="phone" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Action "Libro volontari" -->
+    <record id="action_libro_volontari" model="ir.actions.act_window">
+        <field name="name">Libro volontari</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">list,kanban,form</field>
+        <field name="domain">[('is_volontario', '=', True)]</field>
+        <field name="context">{
+            'default_is_volontario': True,
+            'default_company_type': 'person',
+            'search_default_filter_volontari_attivi': 1,
+        }</field>
+        <field name="view_id" ref="view_res_partner_volontario_list"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessun volontario ancora registrato.
+            </p>
+            <p>
+                Il libro volontari è obbligatorio per gli ETS che si
+                avvalgono di volontari non occasionali (art. 17 D.Lgs
+                117/2017). Aggiungi i volontari da qui oppure spunta
+                "È volontario" su un contatto esistente.
+            </p>
+        </field>
+    </record>
+
+</odoo>

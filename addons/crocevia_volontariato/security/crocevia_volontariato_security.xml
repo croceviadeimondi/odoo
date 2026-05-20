@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Categoria "Crocevia dei Mondi" gia' creata da crocevia_tesseramento.
+             La ricreiamo per sicurezza (idempotente) cosi' il modulo e'
+             installabile anche senza tesseramento. -->
+        <record id="module_category_crocevia"
+                model="ir.module.category">
+            <field name="name">Crocevia dei Mondi</field>
+            <field name="description">Gestione tesseramento e libri sociali del Crocevia.</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Gruppo gestione libro volontari + ore -->
+        <record id="group_crocevia_volontariato" model="res.groups">
+            <field name="name">Libro Volontari Crocevia</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Gestisce il libro dei volontari (art. 17 CTS) e le ore prestate (rendicontazione bandi, INAIL).</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+</odoo>
