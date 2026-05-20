@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Menu radice -->
+    <!-- Menu radice. Sequence=15 lo colloca in cima alla barra app,
+         appena sopra ai menu "Comunicazioni" e "Contatti" di Odoo. -->
     <menuitem id="menu_crocevia_root"
               name="Tesseramento"
-              sequence="20"/>
+              sequence="15"/>
 
     <!-- Sottomenu -->
     <menuitem id="menu_crocevia_soci"
