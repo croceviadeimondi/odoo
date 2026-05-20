@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Tesseramento",
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.3.0',
     'summary': "Gestione tesseramento, cariche direttive e verbali per APS/ETS",
     'description': """
 Modulo custom per l'associazione di promozione sociale Crocevia dei Mondi.

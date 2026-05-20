@@ -8,6 +8,14 @@ CATEGORIA_SOCIO_SELECTION = [
     ('direttivo', 'Direttivo'),
 ]
 
+STATO_CIVILE_SELECTION = [
+    ('celibe', 'Celibe/Nubile'),
+    ('coniugato', 'Coniugato/a'),
+    ('divorziato', 'Divorziato/a'),
+    ('vedovo', 'Vedovo/a'),
+    ('altro', 'Altro / non dichiarato'),
+]
+
 
 class ResPartner(models.Model):
     _inherit = 'res.partner'
@@ -41,6 +49,31 @@ class ResPartner(models.Model):
     )
     data_iscrizione = fields.Date(string="Data iscrizione")
     data_cessazione = fields.Date(string="Data cessazione")
+
+    # Anagrafica privata del socio (per libro soci + ricevute + RUNTS).
+    # Sono campi del Crocevia, non standard in res.partner.
+    data_nascita = fields.Date(string="Data di nascita")
+    luogo_nascita = fields.Char(string="Luogo di nascita")
+    codice_fiscale = fields.Char(
+        string="Codice fiscale",
+        size=16,
+        index=True,
+        help="Codice fiscale di persona fisica (16 caratteri). "
+             "Viene normalizzato in maiuscolo via constraint.",
+    )
+    stato_civile = fields.Selection(
+        selection=STATO_CIVILE_SELECTION,
+        string="Stato civile",
+    )
+
+    @api.constrains('codice_fiscale')
+    def _check_codice_fiscale(self):
+        for p in self:
+            if p.codice_fiscale:
+                # Normalizza in maiuscolo (idempotente)
+                cf = p.codice_fiscale.strip().upper()
+                if cf != p.codice_fiscale:
+                    p.codice_fiscale = cf
     carica_ids = fields.One2many(
         'crocevia.carica', 'partner_id', string="Cariche direttive")
     ricevuta_ids = fields.One2many(

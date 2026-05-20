@@ -43,16 +43,27 @@
             <xpath expr="//notebook" position="inside">
                 <page string="Socio" name="socio">
                     <group>
-                        <group>
+                        <group string="Status">
                             <field name="is_socio"/>
                             <field name="numero_socio"/>
                             <field name="categoria_socio"/>
                         </group>
-                        <group>
+                        <group string="Date">
                             <field name="data_iscrizione"/>
                             <field name="data_cessazione"
                                    invisible="stato_socio != 'cessato'"/>
                             <field name="carica_attuale" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Anagrafica privata (libro soci / RUNTS)">
+                        <group>
+                            <field name="codice_fiscale"
+                                   placeholder="RSSMRA80A01H501U"/>
+                            <field name="data_nascita"/>
+                            <field name="luogo_nascita"/>
+                        </group>
+                        <group>
+                            <field name="stato_civile"/>
                         </group>
                     </group>
                     <separator string="Cariche direttive (storico)"/>
