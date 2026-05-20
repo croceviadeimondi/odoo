@@ -1,16 +1,25 @@
 #!/usr/bin/env python3
 """
-Trasforma il registro soci del Crocevia (xlsx multi-sheet, una sheet per
-anno) in un CSV pronto per essere importato in Odoo.
+Trasforma il registro soci del Crocevia in un CSV pronto per essere
+importato in Odoo. Input supportato: file .xlsx (multi-sheet, una per
+anno) oppure .csv (single sheet).
 
 USO (gira sul TUO PC, non in repo):
 
+    # da xlsx (sceglie sheet)
     python3 tools/importa_registro_soci.py \\
         --input '/percorso/al/Registro Soci.xlsx' \\
         --output '/tmp/soci_per_odoo.csv' \\
         [--sheet 'Anno 2026']
 
-Se non passi `--sheet` prende l'ultimo (di solito l'anno corrente).
+    # da csv (ignora --sheet, il csv ha un solo "foglio")
+    python3 tools/importa_registro_soci.py \\
+        --input '/percorso/al/registro_soci_2026.csv' \\
+        --output '/tmp/soci_per_odoo.csv'
+
+Per gli xlsx, se non passi `--sheet` prende l'ultimo (di solito l'anno
+corrente). Per i csv, il separatore (`,`, `;` o tab) e l'encoding
+(UTF-8, UTF-8 BOM, CP1252, ISO-8859-1) vengono detectati automaticamente.
 
 IMPORTANTE - GDPR / art. 622 c.p.:
     Il file `Registro Soci.xlsx` contiene dati personali e sensibili
@@ -31,8 +40,8 @@ scelta del direttivo Crocevia il pagamento mensile e' volontario
 o FALSE retroattivi sarebbe fuorviante. Si parte dal 2026-01-01 in
 poi registrando le ricevute man mano.
 
-DIPENDENZA:
-    pip install openpyxl
+DIPENDENZE:
+    pip install openpyxl   # solo se l'input e' .xlsx; .csv e' nativo Python
 
 CAVEAT IMPORTANTE - DUPLICATI CON I DIRETTIVI ESISTENTI:
     I 4 direttivi (Tarantino, Ghizzota, Damato, Zingrillo) sono gia'
@@ -66,14 +75,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# openpyxl serve solo per .xlsx. L'import e' lazy per non rompere chi usa
+# solo input .csv senza averla installata.
 try:
-    from openpyxl import load_workbook
+    from openpyxl import load_workbook as _load_workbook
+    _OPENPYXL_OK = True
 except ImportError:
-    sys.stderr.write(
-        "Manca la libreria openpyxl. Installala con:\n"
-        "    pip install openpyxl\n"
-    )
-    sys.exit(1)
+    _load_workbook = None
+    _OPENPYXL_OK = False
 
 
 STATO_CIVILE_MAP = {
@@ -179,30 +188,107 @@ def _scegli_sheet(workbook, nome_richiesto):
     return workbook[workbook.sheetnames[-1]]
 
 
-def _trova_riga_intestazione(sheet):
-    """Cerca la riga che contiene NOME e COGNOME (di solito 1 o 2,
-    a volte 3 se ci sono righe di gruppo come 'ANAGRAFICA | CONTATTI ...')."""
-    for row_idx in range(1, 6):
-        valori = [sheet.cell(row=row_idx, column=c).value
-                  for c in range(1, 35)]
-        normalizzati = [(str(v).strip().upper() if v is not None else '')
-                        for v in valori]
+def _trova_intestazione_in_righe(righe):
+    """Cerca la riga con NOME e COGNOME nelle prime 5 righe della
+    sequenza data. `righe` deve essere indicizzabile.
+
+    Restituisce (riga_idx_1based, header_normalizzato) oppure (None, None).
+    """
+    for i in range(min(5, len(righe))):
+        normalizzati = [
+            (str(v).strip().upper() if v is not None else '')
+            for v in righe[i]
+        ]
         if 'NOME' in normalizzati and 'COGNOME' in normalizzati:
-            return row_idx, normalizzati
+            return i + 1, normalizzati
     return None, None
 
 
-def trasforma(input_path, output_path, sheet_richiesto=None):
-    wb = load_workbook(filename=input_path, data_only=True, read_only=True)
+def _apri_xlsx(input_path, sheet_richiesto):
+    """Apre un .xlsx e ritorna (riga_h, header, righe_dati_iter)."""
+    if not _OPENPYXL_OK:
+        sys.stderr.write(
+            "Per leggere .xlsx serve openpyxl. Installalo con:\n"
+            "    pip install openpyxl\n"
+        )
+        sys.exit(1)
+    wb = _load_workbook(filename=input_path, data_only=True, read_only=True)
     sheet = _scegli_sheet(wb, sheet_richiesto)
     sys.stderr.write(f"Lettura sheet: {sheet.title}\n")
-
-    riga_h, header = _trova_riga_intestazione(sheet)
+    # Materializza prime 5 righe per individuare l'intestazione
+    prime_righe = []
+    for r_idx, row in enumerate(sheet.iter_rows(values_only=True), start=1):
+        prime_righe.append(list(row))
+        if r_idx >= 5:
+            break
+    riga_h, header = _trova_intestazione_in_righe(prime_righe)
     if not header:
         sys.stderr.write("ERRORE: riga intestazione NOME/COGNOME "
                          "non trovata nei primi 5 record\n")
         sys.exit(1)
     sys.stderr.write(f"Intestazione trovata a riga {riga_h}\n")
+    righe_dati = sheet.iter_rows(min_row=riga_h + 1, values_only=True)
+    return riga_h, header, righe_dati
+
+
+def _apri_csv(input_path, sheet_richiesto):
+    """Apre un .csv con autodetect di encoding e separatore.
+    Ritorna (riga_h, header, righe_dati_iter)."""
+    if sheet_richiesto:
+        sys.stderr.write(
+            "WARN: --sheet ignorato per input CSV (il csv ha un solo "
+            "'foglio')\n"
+        )
+    encodings = ('utf-8-sig', 'utf-8', 'cp1252', 'iso-8859-1')
+    last_err = None
+    for enc in encodings:
+        try:
+            with open(input_path, 'r', encoding=enc, newline='') as f:
+                campione = f.read(8192)
+            # Trovato l'encoding giusto, rileggi tutto.
+            try:
+                dialect = csv.Sniffer().sniff(campione, delimiters=',;\t|')
+            except csv.Error:
+                dialect = csv.excel
+            with open(input_path, 'r', encoding=enc, newline='') as f:
+                rows = list(csv.reader(f, dialect=dialect))
+            sys.stderr.write(
+                f"Letto CSV: encoding={enc}, separatore="
+                f"{dialect.delimiter!r}, {len(rows)} righe\n"
+            )
+            break
+        except UnicodeDecodeError as e:
+            last_err = e
+            continue
+    else:
+        sys.stderr.write(
+            f"ERRORE: impossibile leggere {input_path} (encoding non "
+            f"riconosciuto, ultimo errore: {last_err})\n"
+        )
+        sys.exit(1)
+
+    riga_h, header = _trova_intestazione_in_righe(rows)
+    if not header:
+        sys.stderr.write("ERRORE: riga intestazione NOME/COGNOME "
+                         "non trovata nei primi 5 record\n")
+        sys.exit(1)
+    sys.stderr.write(f"Intestazione trovata a riga {riga_h}\n")
+    righe_dati = iter(rows[riga_h:])
+    return riga_h, header, righe_dati
+
+
+def trasforma(input_path, output_path, sheet_richiesto=None):
+    ext = Path(input_path).suffix.lower()
+    if ext in ('.xlsx', '.xlsm'):
+        riga_h, header, righe_dati = _apri_xlsx(input_path, sheet_richiesto)
+    elif ext == '.csv':
+        riga_h, header, righe_dati = _apri_csv(input_path, sheet_richiesto)
+    else:
+        sys.stderr.write(
+            f"ERRORE: estensione '{ext}' non supportata. "
+            f"Usa .xlsx, .xlsm o .csv\n"
+        )
+        sys.exit(1)
 
     # Mappa nome colonna -> indice (0-based)
     colonne = {nome: i for i, nome in enumerate(header) if nome}
@@ -241,7 +327,7 @@ def trasforma(input_path, output_path, sheet_richiesto=None):
         writer = csv.DictWriter(fout, fieldnames=campi_output)
         writer.writeheader()
 
-        for row in sheet.iter_rows(min_row=riga_h + 1, values_only=True):
+        for row in righe_dati:
             nome_full = _stringa(col(row, 'NOME'))
             cognome_full = _stringa(col(row, 'COGNOME'))
             if not (nome_full or cognome_full):
