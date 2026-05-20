@@ -22,11 +22,28 @@ __pycache__/
 # trasformazione (`tools/importa_registro_soci.py`) gira sul pc del
 # segretario, l'output CSV va caricato direttamente in odoo via UI e
 # NON deve transitare dal repo.
+#
+# Pattern aggressivi case-insensitive (Git rispetta case-sensitivity
+# di default; questi pattern includono varianti con maiuscole iniziali).
 registro_soci*
+Registro_soci*
+registro*.csv
+Registro*.csv
+*tesserati*
+*Tesserati*
 soci_export*
 soci_import*
 soci_per_odoo*
+*soci*.csv
+*Soci*.csv
 *_dati_personali*
+
+# Tutti i csv dentro tools/ sono file di dati di lavoro, non codice.
+# Lo script `tools/importa_registro_soci.py` produce csv di output
+# qui o l'utente mette qui gli input per comodita': mai versionarli.
+tools/*.csv
+
+# Formati di foglio elettronico (registro originale di solito qui)
 *.xlsx
 *.xls
 *.ods

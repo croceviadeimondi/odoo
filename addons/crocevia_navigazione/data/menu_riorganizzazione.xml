@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ================================================================
+         NUOVI MENU ROOT TEMATICI
+         Sequence pianificata:
+            10  Soci
+            20  Cassa
+            30  Inventario (esistente, sequence aggiornata sotto)
+            40  Atti
+            50  Volontariato
+            60  Progetti (esistente, sequence aggiornata)
+            70  Calendario (esistente, lasciato dove sta)
+            90  Impostazioni / Applicazioni
+         ================================================================ -->
+
+    <menuitem id="menu_soci_root"
+              name="Soci"
+              sequence="10"/>
+    <record id="menu_soci_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_navigazione,static/description/icon_soci.png</field>
+    </record>
+
+    <menuitem id="menu_cassa_root"
+              name="Cassa"
+              sequence="20"/>
+    <record id="menu_cassa_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_navigazione,static/description/icon_cassa.png</field>
+    </record>
+
+    <menuitem id="menu_atti_root"
+              name="Atti"
+              sequence="40"/>
+    <record id="menu_atti_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_navigazione,static/description/icon_atti.png</field>
+    </record>
+
+    <menuitem id="menu_volontariato_root"
+              name="Volontariato"
+              sequence="50"/>
+    <record id="menu_volontariato_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_navigazione,static/description/icon_volontariato.png</field>
+    </record>
+
+    <!-- ================================================================
+         RIPARENTAMENTO SOTTOMENU CROCEVIA_TESSERAMENTO
+         Le 5 voci del vecchio root Tesseramento vanno in 3 root nuovi:
+            Soci    -> Soci, Richieste iscrizione, Cariche direttive
+            Cassa   -> Ricevute
+            Atti    -> Verbali
+         ================================================================ -->
+
+    <record id="crocevia_tesseramento.menu_crocevia_soci" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_soci_root"/>
+        <field name="sequence">10</field>
+    </record>
+    <record id="crocevia_tesseramento.menu_crocevia_richieste" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_soci_root"/>
+        <field name="sequence">20</field>
+    </record>
+    <record id="crocevia_tesseramento.menu_crocevia_cariche" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_soci_root"/>
+        <field name="sequence">30</field>
+    </record>
+    <record id="crocevia_tesseramento.menu_crocevia_ricevute" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_cassa_root"/>
+        <field name="sequence">10</field>
+    </record>
+    <record id="crocevia_tesseramento.menu_crocevia_verbali" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_atti_root"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- Vecchio menu root "Tesseramento" disattivato: i suoi figli sono
+         tutti migrati altrove, restava un tile vuoto. -->
+    <record id="crocevia_tesseramento.menu_crocevia_root" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+
+    <!-- ================================================================
+         RIPARENTAMENTO MENU NATIVI ODOO
+         ================================================================ -->
+
+    <!-- Contatti (modulo `contacts`) diventa "Tutti i contatti" sotto Soci -->
+    <record id="contacts.menu_contacts" model="ir.ui.menu">
+        <field name="name">Tutti i contatti</field>
+        <field name="parent_id" ref="menu_soci_root"/>
+        <field name="sequence">40</field>
+    </record>
+
+    <!-- Fatturazione (`account`) diventa sotto-voce di Cassa -->
+    <record id="account.menu_finance" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_cassa_root"/>
+        <field name="sequence">30</field>
+    </record>
+
+    <!-- Note spese (`hr_expense`) diventa sotto-voce di Cassa -->
+    <record id="hr_expense.menu_hr_expense_root" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_cassa_root"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- Volontari (ex Dipendenti, `hr`) diventa sotto-voce di Volontariato -->
+    <record id="hr.menu_hr_root" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_volontariato_root"/>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- Fogli ore (`hr_timesheet`, "Registri lavori") sotto Volontariato -->
+    <record id="hr_timesheet.timesheet_menu_root" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_volontariato_root"/>
+        <field name="sequence">20</field>
+    </record>
+
+    <!-- Presenze (`hr_attendance`) sotto Volontariato -->
+    <record id="hr_attendance.menu_hr_attendance_root" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_volontariato_root"/>
+        <field name="sequence">30</field>
+    </record>
+
+    <!-- Da fare (`project_todo`) sotto Progetti -->
+    <record id="project_todo.menu_todo_todos" model="ir.ui.menu">
+        <field name="parent_id" ref="project.menu_main_pm"/>
+        <field name="sequence">50</field>
+    </record>
+
+    <!-- ================================================================
+         AGGIORNAMENTO SEQUENCE DEI ROOT ESISTENTI CHE RESTANO ROOT
+         ================================================================ -->
+
+    <!-- Inventario esistente (sequence 17 -> 30, dopo Cassa) -->
+    <record id="crocevia_inventario.menu_crocevia_inventario_root" model="ir.ui.menu">
+        <field name="sequence">30</field>
+    </record>
+
+    <!-- Progetti (sequence -> 60) -->
+    <record id="project.menu_main_pm" model="ir.ui.menu">
+        <field name="sequence">60</field>
+    </record>
+
+    <!-- Calendario (`calendar`) spostato in fondo, sequence 70.
+         Resta come root perche' utile per appuntamenti riunioni/eventi. -->
+    <record id="calendar.mail_menu_calendar" model="ir.ui.menu">
+        <field name="sequence">70</field>
+    </record>
+
+    <!-- Dashboard (`spreadsheet_dashboard`) e' tornato come dipendenza
+         di altri moduli installati; lo nascondiamo come fatto in
+         precedenza (era stato disattivato ma poi reinstalled). -->
+    <record id="spreadsheet_dashboard.spreadsheet_dashboard_menu_root" model="ir.ui.menu">
+        <field name="active" eval="False"/>
+    </record>
+
+</odoo>
