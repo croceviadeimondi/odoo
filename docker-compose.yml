@@ -13,7 +13,12 @@ services:
     restart: unless-stopped
 
   odoo:
-    image: odoo:18.0
+    # Immagine custom derivata da `odoo:18.0` con weasyprint, pyhanko,
+    # pyhanko-certvalidator e qpdf installati (vedi Dockerfile).
+    # Servono ai moduli custom del Crocevia per generare/verificare i
+    # documenti firmati del registro volontari.
+    build: .
+    image: crocevia-odoo:18.0
     container_name: crocevia-odoo
     depends_on:
       - db
