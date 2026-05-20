@@ -17,6 +17,7 @@
                 (4, ref('account.group_account_manager')),
                 (4, ref('crocevia_tesseramento.group_crocevia_direttivo')),
                 (4, ref('crocevia_inventario.group_crocevia_inventario')),
+                (4, ref('crocevia_volontariato.group_crocevia_volontariato')),
             ]"/>
         </record>
 
