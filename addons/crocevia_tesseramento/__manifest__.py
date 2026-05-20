@@ -14,7 +14,6 @@ Funzionalita:
   dal sito esterno (croceviadeimondi.org, Astro). Il form HTML vive sul sito,
   non in Odoo
 - Archivio minimo dei verbali (assemblee soci e riunioni del direttivo)
-- Esenzione automatica della quota associativa per i soci onorari
 """,
     'author': "Crocevia dei Mondi APS",
     'website': "https://croceviadeimondi.org",
@@ -24,7 +23,6 @@ Funzionalita:
         'base',
         'contacts',
         'mail',
-        'membership',
         'account',
     ],
     'data': [

@@ -10,11 +10,16 @@ Modulo Odoo 18 per la gestione del tesseramento del Crocevia dei Mondi APS.
 | Cariche direttive | Modello `crocevia.carica` con storico mandati per Presidente, Vicepresidente, Segretario, Tesoriere. Vincolo: niente sovrapposizioni di mandato per lo stesso ruolo. |
 | API tesseramento | Endpoint `POST /api/iscrizione` che riceve le richieste dal sito esterno (croceviadeimondi.org) e crea record `crocevia.richiesta.iscrizione` da approvare. Il form HTML non sta in Odoo: vive nell'app Astro del sito. |
 | Verbali | Modello `crocevia.verbale`: archivio minimo con data, tipo (assemblea soci / riunione direttivo), file allegato. |
-| Esenzione onorari | Categoria `onorario` imposta `free_member=True` (campo nativo `membership`), quindi quota associativa non dovuta. |
+
+Nota sui soci onorari: la categoria `onorario` e' usata come marcatore
+anagrafico per non chiedere la quota. La quota associativa annua viene
+gestita come normale fattura in Contabilita' (non c'e' nessun modulo
+`membership` di Odoo abbinato), quindi e' sufficiente non emettere fattura
+per gli onorari.
 
 ## Dipendenze
 
-`base`, `contacts`, `mail`, `membership`, `account`.
+`base`, `contacts`, `mail`, `account`.
 
 Nota: NON dipende da `website`. Il sito del Crocevia e' un'app Astro statica
 separata (repo `croceviadeimondi/sito`), non un sito Odoo. Odoo qui fa solo
@@ -70,7 +75,7 @@ Dopo aver montato `addons/` in Odoo (gia' configurato nel docker-compose del rep
 
 1. Attiva la modalita' sviluppatore.
 2. Vai in App, rimuovi il filtro "Apps", aggiorna la lista.
-3. Cerca "Crocevia" e installa: tira giu' in cascata `membership`, `account`, `mail`, `contacts`.
+3. Cerca "Crocevia" e installa: tira giu' in cascata `account`, `mail`, `contacts`.
 4. Assegna i membri del direttivo al gruppo "Direttivo Crocevia"
    da Impostazioni - Utenti.
 

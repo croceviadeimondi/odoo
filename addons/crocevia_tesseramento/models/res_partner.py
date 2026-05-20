@@ -1,4 +1,4 @@
-from odoo import api, fields, models, _
+from odoo import api, fields, models
 
 
 CATEGORIA_SOCIO_SELECTION = [
@@ -58,13 +58,6 @@ class ResPartner(models.Model):
                 ruolo_dict.get(c.ruolo, c.ruolo) for c in cariche
             ) or False
 
-    @api.onchange('categoria_socio')
-    def _onchange_categoria_socio(self):
-        # I soci onorari sono esenti dalla quota: marchiamoli come "membri
-        # gratuiti" (campo nativo del modulo membership).
-        if self.categoria_socio == 'onorario':
-            self.free_member = True
-
     def action_attiva_socio(self):
         Sequence = self.env['ir.sequence']
         for partner in self:
@@ -79,8 +72,6 @@ class ResPartner(models.Model):
             if not partner.numero_socio:
                 vals['numero_socio'] = Sequence.next_by_code(
                     'crocevia.numero.socio')
-            if partner.categoria_socio == 'onorario':
-                vals['free_member'] = True
             partner.write(vals)
 
     def action_cessa_socio(self):
