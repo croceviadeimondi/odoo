@@ -59,7 +59,7 @@
             <form>
                 <sheet>
                     <div class="alert alert-info" role="alert">
-                        La quota associativa annuale copre anche la
+                        Il tesseramento (quota annuale) copre anche la
                         <strong>prima mensilita'</strong> del mese qui
                         indicato. Per i mesi successivi usa "Contributo
                         mensile" come ricevuta separata.
@@ -84,7 +84,7 @@
                     </group>
                 </sheet>
                 <footer>
-                    <button string="Registra quota"
+                    <button string="Registra tesseramento"
                             name="action_conferma" type="object"
                             class="oe_highlight"/>
                     <button string="Annulla"
@@ -95,7 +95,7 @@
     </record>
 
     <record id="action_crocevia_ricevuta_quota_wizard" model="ir.actions.act_window">
-        <field name="name">Registra quota annuale</field>
+        <field name="name">Registra tesseramento</field>
         <field name="res_model">crocevia.ricevuta.quota.wizard</field>
         <field name="view_mode">form</field>
         <field name="target">new</field>

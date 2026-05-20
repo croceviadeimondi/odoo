@@ -7,7 +7,7 @@ fuori campo IVA / de-commercializzati). Si rilasciano ricevute non
 fiscali numerate progressivamente, da consegnare al socio.
 
 Tipi di ricevuta supportati:
-- `quota_annuale`        (10 EUR di default, copre la prima mensilita'
+- `tesseramento`         (10 EUR di default, copre la prima mensilita'
                           del mese di rinnovo)
 - `contributo_mensile`   (10 EUR di default)
 - `obolo_giornaliero`    (2 EUR di default)
@@ -26,7 +26,7 @@ from odoo.exceptions import ValidationError
 
 
 TIPO_RICEVUTA_SELECTION = [
-    ('quota_annuale', 'Quota associativa annuale'),
+    ('tesseramento', 'Tesseramento (quota annuale)'),
     ('contributo_mensile', 'Contributo mensile'),
     ('obolo_giornaliero', 'Obolo giornaliero'),
     ('contributo_evento', 'Contributo evento'),
@@ -44,7 +44,7 @@ METODO_PAGAMENTO_SELECTION = [
 
 # Tipi che richiedono `mese_riferimento` (per il calcolo di chi e' in
 # regola con la mensilita' di un certo mese).
-TIPI_CON_MESE = ('contributo_mensile', 'quota_annuale')
+TIPI_CON_MESE = ('contributo_mensile', 'tesseramento')
 
 # Formato accettato per `mese_riferimento`: YYYY-MM (regex permissivo).
 MESE_REGEX = re.compile(r'^\d{4}-(0[1-9]|1[0-2])$')
@@ -91,9 +91,9 @@ class CroceviaRicevuta(models.Model):
     mese_riferimento = fields.Char(
         string="Mese di riferimento",
         size=7,
-        help="Formato YYYY-MM. Richiesto per tipi 'quota_annuale' e "
-             "'contributo_mensile' (la quota annuale copre la prima "
-             "mensilita' del mese qui indicato).",
+        help="Formato YYYY-MM. Richiesto per tipi 'tesseramento' e "
+             "'contributo_mensile' (il tesseramento annuale copre la "
+             "prima mensilita' del mese qui indicato).",
     )
     importo = fields.Monetary(
         string="Importo",
@@ -146,7 +146,7 @@ class CroceviaRicevuta(models.Model):
                 if not r.mese_riferimento:
                     raise ValidationError(_(
                         "Il mese di riferimento e' obbligatorio per le "
-                        "ricevute di tipo Quota annuale o Contributo "
+                        "ricevute di tipo Tesseramento o Contributo "
                         "mensile."
                     ))
                 if not MESE_REGEX.match(r.mese_riferimento):
@@ -172,7 +172,7 @@ class CroceviaRicevuta(models.Model):
             return
         IcP = self.env['ir.config_parameter'].sudo()
         defaults_per_tipo = {
-            'quota_annuale': 'crocevia_tesseramento.importo_quota_annuale',
+            'tesseramento': 'crocevia_tesseramento.importo_tesseramento',
             'contributo_mensile': 'crocevia_tesseramento.importo_mensile',
             'obolo_giornaliero': 'crocevia_tesseramento.importo_obolo',
             'contributo_evento': 'crocevia_tesseramento.importo_evento_default',

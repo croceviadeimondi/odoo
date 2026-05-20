@@ -129,12 +129,12 @@ class ResPartner(models.Model):
             'context': {'default_partner_id': self.id},
         }
 
-    def action_registra_quota_annuale(self):
-        """Apre wizard quota annuale (10 EUR di default, copre 1a mensilita')."""
+    def action_registra_tesseramento(self):
+        """Apre wizard tesseramento (10 EUR di default, copre 1a mensilita')."""
         self.ensure_one()
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Registra quota annuale',
+            'name': 'Registra tesseramento',
             'res_model': 'crocevia.ricevuta.quota.wizard',
             'view_mode': 'form',
             'target': 'new',

@@ -16,8 +16,8 @@
             <field name="value">10.0</field>
         </record>
 
-        <record id="param_importo_quota_annuale" model="ir.config_parameter">
-            <field name="key">crocevia_tesseramento.importo_quota_annuale</field>
+        <record id="param_importo_tesseramento" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.importo_tesseramento</field>
             <field name="value">10.0</field>
         </record>
 

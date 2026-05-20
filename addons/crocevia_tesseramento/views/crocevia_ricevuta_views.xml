@@ -76,8 +76,8 @@
                 <filter string="Mese corrente" name="filter_mese_corrente"
                         domain="[('data', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')), ('data', '&lt;', (context_today() + relativedelta(months=1, day=1)).strftime('%Y-%m-%d'))]"/>
                 <separator/>
-                <filter string="Quote annuali" name="filter_tipo_quota"
-                        domain="[('tipo', '=', 'quota_annuale')]"/>
+                <filter string="Tesseramenti" name="filter_tipo_tesseramento"
+                        domain="[('tipo', '=', 'tesseramento')]"/>
                 <filter string="Mensilita'" name="filter_tipo_mensile"
                         domain="[('tipo', '=', 'contributo_mensile')]"/>
                 <filter string="Oboli" name="filter_tipo_obolo"
@@ -114,7 +114,7 @@
             <p>
                 Le ricevute si emettono di solito dalla scheda del socio
                 tramite i bottoni "Obolo +2€", "Mensilita'", "Evento"
-                e "Quota annuale". Da qui invece vedi lo storico
+                e "Tesseramento". Da qui invece vedi lo storico
                 cumulativo e puoi filtrare per mese, socio, tipo o metodo
                 di pagamento.
             </p>

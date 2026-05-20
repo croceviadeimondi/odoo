@@ -28,8 +28,8 @@
                     <button name="action_registra_evento" type="object"
                             string="Evento"
                             invisible="stato_socio != 'attivo'"/>
-                    <button name="action_registra_quota_annuale" type="object"
-                            string="Quota annuale"
+                    <button name="action_registra_tesseramento" type="object"
+                            string="Tesseramento"
                             invisible="stato_socio != 'attivo'"/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"

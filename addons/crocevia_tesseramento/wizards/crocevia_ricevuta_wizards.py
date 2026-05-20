@@ -6,8 +6,8 @@ o mese):
 - `crocevia.ricevuta.mensilita.wizard`  -> sceglie mese e conferma 10 EUR
 - `crocevia.ricevuta.evento.wizard`     -> importo (default 3 EUR) e
                                            descrizione evento
-- `crocevia.ricevuta.quota.wizard`      -> sceglie mese (la quota copre
-                                           la prima mensilita')
+- `crocevia.ricevuta.quota.wizard`      -> sceglie mese (il tesseramento
+                                           copre la prima mensilita')
 
 L'obolo NON ha wizard: 2 EUR fissi, partono dalla scheda socio con un
 click sul bottone "Obolo +2".
@@ -125,7 +125,7 @@ class CroceviaRicevutaMensilitaWizard(models.TransientModel):
 
 class CroceviaRicevutaQuotaWizard(models.TransientModel):
     _name = 'crocevia.ricevuta.quota.wizard'
-    _description = "Registra quota associativa annuale"
+    _description = "Registra tesseramento"
     _inherit = 'crocevia.ricevuta.wizard.base'
 
     mese_riferimento = fields.Char(
@@ -133,7 +133,7 @@ class CroceviaRicevutaQuotaWizard(models.TransientModel):
         required=True,
         size=7,
         default=lambda self: fields.Date.context_today(self).strftime('%Y-%m'),
-        help="La quota annuale copre la prima mensilita': indica qui il "
+        help="Il tesseramento copre la prima mensilita': indica qui il "
              "mese a partire dal quale il socio risulta in regola "
              "(formato YYYY-MM).",
     )
@@ -141,7 +141,7 @@ class CroceviaRicevutaQuotaWizard(models.TransientModel):
         string="Importo",
         required=True,
         default=lambda self: self._param(
-            self.env, 'crocevia_tesseramento.importo_quota_annuale', '10.0'),
+            self.env, 'crocevia_tesseramento.importo_tesseramento', '10.0'),
     )
     currency_id = fields.Many2one(
         'res.currency',
@@ -153,7 +153,7 @@ class CroceviaRicevutaQuotaWizard(models.TransientModel):
         r = self.env['crocevia.ricevuta'].create({
             'partner_id': self.partner_id.id,
             'data': self.data,
-            'tipo': 'quota_annuale',
+            'tipo': 'tesseramento',
             'mese_riferimento': self.mese_riferimento,
             'importo': self.importo,
             'metodo': self.metodo,
