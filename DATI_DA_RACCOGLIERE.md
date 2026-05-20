@@ -40,28 +40,28 @@ Per ciascuno dei 4:
 - [ ] Codice fiscale
 - [ ] Data e luogo di nascita
 - [ ] Indirizzo residenza (via, CAP, citta', provincia)
-- [ ] Email personale
+- [x] Email personale (`alderan87@yahoo.it`)
 - [ ] Telefono
 
 ### Vicepresidente: Eleonora Ghizzota (numero socio 2)
 - [ ] Codice fiscale
 - [ ] Data e luogo di nascita
 - [ ] Indirizzo residenza
-- [ ] Email personale
+- [x] Email personale (`angelica.ghizzota@gmail.com`)
 - [ ] Telefono
 
 ### Segretario: Lele Damato (numero socio 3) — l'utente
 - [ ] Codice fiscale
 - [ ] Data e luogo di nascita
 - [ ] Indirizzo residenza
-- [ ] Email (`ggdamato@outlook.it` da confermare)
+- [x] Email (`ggdamato@outlook.it`)
 - [ ] Telefono
 
 ### Tesoriere: Fabrizio Zingrillo (numero socio 4)
 - [ ] Codice fiscale
 - [ ] Data e luogo di nascita
 - [ ] Indirizzo residenza
-- [ ] Email personale
+- [x] Email personale (`ziofabr@gmail.com`)
 - [ ] Telefono
 
 ## 3. Verbale assemblea elettiva del direttivo
