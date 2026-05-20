@@ -13,6 +13,12 @@
               action="action_crocevia_bene"
               sequence="10"/>
 
+    <menuitem id="menu_crocevia_inventario_bene_wizard"
+              name="Aggiungi un bene"
+              parent="menu_crocevia_inventario_root"
+              action="action_crocevia_bene_wizard"
+              sequence="15"/>
+
     <menuitem id="menu_crocevia_inventario_prestiti"
               name="Prestiti"
               parent="menu_crocevia_inventario_root"

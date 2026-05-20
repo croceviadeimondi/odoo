@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_bene_wizard_form" model="ir.ui.view">
+        <field name="name">crocevia.bene.wizard.form</field>
+        <field name="model">crocevia.bene.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="identificazione,dettagli,conclusione"/>
+                </header>
+                <sheet>
+                    <!-- Step 1: identificazione -->
+                    <div invisible="state != 'identificazione'">
+                        <p class="text-muted">
+                            Comincia con il titolo, la categoria e la sede.
+                            Sono gli unici campi obbligatori. Per giochi da
+                            tavolo e altro potrai saltare il passaggio
+                            "dettagli editoriali" del prossimo step.
+                        </p>
+                        <group>
+                            <field name="name"
+                                   placeholder="Es. Pathfinder 2e - Core Rulebook"
+                                   required="state == 'identificazione'"/>
+                            <field name="categoria"/>
+                            <field name="sede_id"
+                                   options="{'no_create_edit': True}"
+                                   required="state == 'identificazione'"/>
+                        </group>
+                    </div>
+
+                    <!-- Step 2: dettagli editoriali -->
+                    <div invisible="state != 'dettagli'">
+                        <p class="text-muted"
+                           invisible="categoria not in ('libro','manuale','gioco_di_ruolo')">
+                            Dettagli per libri, manuali e giochi di ruolo.
+                            Tutti opzionali, ma utili per cercare e
+                            inventariare.
+                        </p>
+                        <p class="text-muted"
+                           invisible="categoria in ('libro','manuale','gioco_di_ruolo')">
+                            Per i giochi da tavolo / altro questi campi
+                            sono di solito non rilevanti. Puoi proseguire
+                            senza compilarli.
+                        </p>
+                        <group>
+                            <field name="autore"/>
+                            <field name="editore"/>
+                            <field name="anno_pubblicazione"
+                                   placeholder="es. 2024"/>
+                            <field name="isbn"
+                                   invisible="categoria not in ('libro','manuale','gioco_di_ruolo')"
+                                   placeholder="978-..."/>
+                        </group>
+                    </div>
+
+                    <!-- Step 3: conclusione -->
+                    <div invisible="state != 'conclusione'">
+                        <p class="text-muted">
+                            Ultimi dati di gestione interna. Anche questi
+                            sono tutti opzionali. Quando sei pronto clicca
+                            <strong>Salva</strong> (oppure <strong>Salva
+                            e aggiungi un altro</strong> se devi inserirne
+                            altri della stessa sede).
+                        </p>
+                        <group>
+                            <group>
+                                <field name="codice_interno"
+                                       placeholder="es. BTL-001"/>
+                                <field name="valore_stimato"
+                                       widget="monetary"/>
+                                <field name="currency_id" invisible="1"/>
+                            </group>
+                        </group>
+                        <group string="Note">
+                            <field name="note" nolabel="1"
+                                   placeholder="Annotazioni libere"/>
+                        </group>
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Indietro"
+                            name="action_indietro" type="object"
+                            class="btn-secondary"
+                            invisible="state == 'identificazione'"/>
+                    <button string="Avanti"
+                            name="action_avanti" type="object"
+                            class="oe_highlight"
+                            invisible="state == 'conclusione'"/>
+                    <button string="Salva"
+                            name="action_salva" type="object"
+                            class="oe_highlight"
+                            invisible="state != 'conclusione'"/>
+                    <button string="Salva e aggiungi un altro"
+                            name="action_salva_e_nuovo" type="object"
+                            invisible="state != 'conclusione'"/>
+                    <button string="Annulla"
+                            class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crocevia_bene_wizard" model="ir.actions.act_window">
+        <field name="name">Aggiungi un bene</field>
+        <field name="res_model">crocevia.bene.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

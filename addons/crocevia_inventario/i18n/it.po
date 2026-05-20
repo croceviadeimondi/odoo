@@ -24,6 +24,12 @@ msgid "Beni"
 msgstr "Beni"
 
 #. module: crocevia_inventario
+#: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_bene_wizard
+#: model:ir.actions.act_window,name:crocevia_inventario.action_crocevia_bene_wizard
+msgid "Aggiungi un bene"
+msgstr "Aggiungi un bene"
+
+#. module: crocevia_inventario
 #: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_prestiti
 #: model:ir.actions.act_window,name:crocevia_inventario.action_crocevia_prestito
 msgid "Prestiti"

@@ -34,6 +34,7 @@ agganci con `stock`/`product` di Odoo, niente movimenti di magazzino.
         'views/crocevia_sede_views.xml',
         'views/crocevia_bene_views.xml',
         'views/crocevia_prestito_views.xml',
+        'wizards/crocevia_bene_wizard_views.xml',
         'views/menu_views.xml',
         'data/sedi_iniziali.xml',
     ],

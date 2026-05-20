@@ -5,3 +5,4 @@ access_crocevia_prestito_inventario,crocevia.prestito inventario,model_crocevia_
 access_crocevia_sede_user_ro,crocevia.sede utenti interni readonly,model_crocevia_sede,base.group_user,1,0,0,0
 access_crocevia_bene_user_ro,crocevia.bene utenti interni readonly,model_crocevia_bene,base.group_user,1,0,0,0
 access_crocevia_prestito_user_ro,crocevia.prestito utenti interni readonly,model_crocevia_prestito,base.group_user,1,0,0,0
+access_crocevia_bene_wizard,crocevia.bene.wizard inventario,model_crocevia_bene_wizard,group_crocevia_inventario,1,1,1,1
