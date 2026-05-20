@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_registro_cessazione_wizard_form" model="ir.ui.view">
+        <field name="name">crocevia.registro.cessazione.wizard.form</field>
+        <field name="model">crocevia.registro.cessazione.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="iscrizione_id" readonly="1"/>
+                        <field name="data_fine"/>
+                    </group>
+                    <group string="Note (opzionali)">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_conferma" type="object"
+                            string="Cessa iscrizione"
+                            class="oe_highlight"/>
+                    <button string="Annulla" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crocevia_registro_cessazione_wizard"
+            model="ir.actions.act_window">
+        <field name="name">Cessa iscrizione</field>
+        <field name="res_model">crocevia.registro.cessazione.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_registro_export_wizard_form" model="ir.ui.view">
+        <field name="name">crocevia.registro.export.wizard.form</field>
+        <field name="model">crocevia.registro.export.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group invisible="file_csv">
+                        <field name="data_riferimento"/>
+                        <field name="tipo_filtro"/>
+                    </group>
+                    <group invisible="not file_csv">
+                        <field name="file_csv" filename="file_nome"
+                               readonly="1"/>
+                        <field name="file_nome" invisible="1"/>
+                    </group>
+                    <div class="alert alert-success" role="alert"
+                         invisible="not file_csv">
+                        File CSV generato. Cliccaci sopra per scaricarlo,
+                        poi invialo alla compagnia assicurativa.
+                        <strong>Cancella il file dopo l'invio</strong>
+                        (contiene dati personali dei volontari).
+                    </div>
+                </sheet>
+                <footer>
+                    <button name="action_genera" type="object"
+                            string="Genera CSV"
+                            class="oe_highlight"
+                            invisible="file_csv"/>
+                    <button string="Chiudi" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crocevia_registro_export_wizard"
+            model="ir.actions.act_window">
+        <field name="name">Esporta per assicurazione</field>
+        <field name="res_model">crocevia.registro.export.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

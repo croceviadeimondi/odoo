@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menu root "Registro Volontari": e' un atto formale separato dal
+         libro volontari operativo (crocevia_volontariato), quindi
+         menu root a se' invece di sotto-voce di Volontariato. -->
+    <menuitem id="menu_registro_volontari_root"
+              name="Registro Volontari"
+              sequence="55"/>
+
+    <menuitem id="menu_registro_iscrizioni"
+              name="Iscrizioni"
+              parent="menu_registro_volontari_root"
+              action="action_registro_iscrizione"
+              sequence="10"/>
+
+    <menuitem id="menu_registro_vidimazioni"
+              name="Vidimazioni"
+              parent="menu_registro_volontari_root"
+              action="action_registro_vidimazione"
+              sequence="20"/>
+
+    <menuitem id="menu_registro_annullamenti"
+              name="Annullamenti"
+              parent="menu_registro_volontari_root"
+              action="action_registro_annullamento"
+              sequence="30"/>
+
+    <menuitem id="menu_registro_export"
+              name="Esporta per assicurazione"
+              parent="menu_registro_volontari_root"
+              action="action_crocevia_registro_export_wizard"
+              sequence="40"/>
+
+</odoo>
