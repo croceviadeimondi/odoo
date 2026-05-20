@@ -148,3 +148,16 @@ class ResPartner(models.Model):
                          .get_param(key, str(fallback)))
         except (TypeError, ValueError):
             return float(fallback)
+
+    def action_mostra_qr_bonifico(self):
+        """Apre wizard col QR EPC per fare un bonifico SEPA precompilato
+        al conto del crocevia (importo e causale modificabili al volo)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'QR bonifico - %s' % self.name,
+            'res_model': 'crocevia.qr.bonifico.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }

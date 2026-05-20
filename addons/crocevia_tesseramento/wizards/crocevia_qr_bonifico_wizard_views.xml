@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_qr_bonifico_wizard_form" model="ir.ui.view">
+        <field name="name">crocevia.qr.bonifico.wizard.form</field>
+        <field name="model">crocevia.qr.bonifico.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div invisible="not iban_mancante"
+                         class="alert alert-warning" role="alert">
+                        <strong>IBAN non configurato.</strong>
+                        Imposta il parametro di sistema
+                        <code>crocevia_tesseramento.iban</code> da
+                        Impostazioni &gt; Tecnico &gt; Parametri di sistema,
+                        oppure compila qui il campo IBAN per generare il
+                        QR una tantum (non verra' salvato).
+                    </div>
+                    <group invisible="iban_mancante">
+                        <group>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="intestatario"/>
+                            <field name="iban"/>
+                        </group>
+                        <group>
+                            <field name="importo"/>
+                            <field name="causale"/>
+                            <field name="iban_mancante" invisible="1"/>
+                        </group>
+                    </group>
+                    <!-- Versione solo per IBAN mancante: form compilabile -->
+                    <group invisible="not iban_mancante">
+                        <field name="iban"
+                               placeholder="IT60X0542811101000000000000"/>
+                    </group>
+                    <div invisible="iban_mancante" class="text-center"
+                         style="margin-top: 20px;">
+                        <field name="qr_image" widget="image"
+                               options="{'size': [320, 320]}"
+                               nolabel="1"/>
+                    </div>
+                    <div invisible="iban_mancante"
+                         class="text-center text-muted"
+                         style="margin-top: 10px;">
+                        Scansiona il QR con l'app della banca per un
+                        bonifico SEPA precompilato (commissioni 0).
+                        Modifica importo o causale per rigenerare il QR.
+                    </div>
+                </sheet>
+                <footer>
+                    <button string="Chiudi"
+                            class="btn-secondary" special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crocevia_qr_bonifico_wizard" model="ir.actions.act_window">
+        <field name="name">QR bonifico</field>
+        <field name="res_model">crocevia.qr.bonifico.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

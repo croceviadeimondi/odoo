@@ -31,6 +31,9 @@
                     <button name="action_registra_tesseramento" type="object"
                             string="Tesseramento"
                             invisible="stato_socio != 'attivo'"/>
+                    <button name="action_mostra_qr_bonifico" type="object"
+                            string="QR bonifico"
+                            invisible="stato_socio != 'attivo'"/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"
                            statusbar_visible="richiesta,attivo,cessato"/>

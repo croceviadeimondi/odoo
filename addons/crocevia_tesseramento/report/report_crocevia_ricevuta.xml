@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Template del corpo della ricevuta. Una pagina per ricevuta,
+         intestazione/footer da web.external_layout (logo + dati azienda). -->
+    <template id="report_crocevia_ricevuta_document">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h2>
+                    Ricevuta non fiscale
+                    <span class="float-end" t-out="o.numero"/>
+                </h2>
+                <p>
+                    Data: <span t-field="o.data"/>
+                </p>
+
+                <table class="table table-sm" style="margin-top: 20px;">
+                    <tbody>
+                        <tr>
+                            <th style="width: 25%;">Da</th>
+                            <td>
+                                <span t-out="o.partner_id.name"/>
+                                <span t-if="o.partner_id.numero_socio">
+                                    (socio n. <span t-out="o.partner_id.numero_socio"/>)
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Causale</th>
+                            <td>
+                                <span t-out="dict(o._fields['tipo'].selection).get(o.tipo, o.tipo)"/>
+                                <span t-if="o.mese_riferimento">
+                                    - mese <span t-out="o.mese_riferimento"/>
+                                </span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Importo</th>
+                            <td>
+                                <strong>
+                                    <span t-field="o.importo"
+                                          t-options='{"widget": "monetary", "display_currency": o.currency_id}'/>
+                                </strong>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Metodo</th>
+                            <td>
+                                <span t-out="dict(o._fields['metodo'].selection).get(o.metodo, o.metodo)"/>
+                            </td>
+                        </tr>
+                        <tr t-if="o.riferimento">
+                            <th>Riferimento</th>
+                            <td t-out="o.riferimento"/>
+                        </tr>
+                        <tr t-if="o.note">
+                            <th>Note</th>
+                            <td t-out="o.note"/>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p style="margin-top: 30px;">
+                    <em>
+                        Ricevuta non fiscale rilasciata ai sensi dell'art. 4
+                        D.P.R. 633/72 e dell'art. 85 D.Lgs. 117/2017
+                        (Codice del Terzo Settore) per attivita' di
+                        interesse generale istituzionale fuori campo IVA.
+                    </em>
+                </p>
+
+                <!-- QR EPC per il prossimo bonifico (solo se IBAN aps configurato) -->
+                <div t-if="qr_per_doc.get(o.id)"
+                     style="text-align: center; margin-top: 40px;
+                            border-top: 1px solid #ccc; padding-top: 20px;">
+                    <p>
+                        <strong>Vuoi pagare il prossimo contributo con bonifico?</strong>
+                    </p>
+                    <img t-att-src="'data:image/png;base64,%s' % qr_per_doc[o.id].decode('utf-8')"
+                         style="width: 180px; height: 180px;"/>
+                    <p style="margin-top: 10px;">
+                        <em>Scansiona col cellulare dall'app della tua banca:
+                            il bonifico SEPA si compila automaticamente, niente
+                            commissioni.</em>
+                    </p>
+                </div>
+
+                <div style="margin-top: 60px;">
+                    <p>Per Crocevia dei Mondi APS</p>
+                    <p style="margin-top: 30px;">_____________________________</p>
+                    <p><em>Il Tesoriere</em></p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Template "container" che cicla sui doc selezionati -->
+    <template id="report_crocevia_ricevuta">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="crocevia_tesseramento.report_crocevia_ricevuta_document"/>
+            </t>
+        </t>
+    </template>
+
+    <!-- Action report: aggiunge "Stampa &gt; Ricevuta" sul form della ricevuta -->
+    <record id="action_report_crocevia_ricevuta" model="ir.actions.report">
+        <field name="name">Ricevuta</field>
+        <field name="model">crocevia.ricevuta</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crocevia_tesseramento.report_crocevia_ricevuta</field>
+        <field name="report_file">crocevia_tesseramento.report_crocevia_ricevuta</field>
+        <field name="binding_model_id" ref="model_crocevia_ricevuta"/>
+        <field name="binding_type">report</field>
+        <field name="binding_view_types">form,list</field>
+    </record>
+
+</odoo>
