@@ -54,7 +54,10 @@ CAVEAT IMPORTANTE - DUPLICATI CON I DIRETTIVI ESISTENTI:
     1. apri Odoo > Tesseramento > Soci
     2. apri ciascuno dei 4 direttivi e compila il campo "Codice fiscale"
     3. (opzionale) imposta loro un external id da Settings > Tecnico >
-       External Identifiers a `crocevia_tesseramento.socio_<CF>`
+       External Identifiers a `__import__.socio_<CF>` (il prefisso
+       `__import__` e' quello convenzionale di Odoo per record importati
+       via UI: non e' un modulo reale, quindi un upgrade non li
+       cancellera')
     4. ESEGUI L'IMPORT.
     Se invece ti va bene il fix manuale, importa e poi cancella i 4
     duplicati senza CF.
@@ -343,7 +346,7 @@ def trasforma(input_path, output_path, sheet_richiesto=None):
                 continue
 
             record = {
-                'id': f"crocevia_tesseramento.socio_{cf}",
+                'id': f"__import__.socio_{cf}",
                 'name': name,
                 'company_type': 'person',
                 'is_company': 'False',
