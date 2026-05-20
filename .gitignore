@@ -16,3 +16,18 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+
+# DATI PERSONALI DEI SOCI - GDPR / art. 622 c.p.
+# NON committare MAI il registro soci o suoi derivati. Lo script di
+# trasformazione (`tools/importa_registro_soci.py`) gira sul pc del
+# segretario, l'output CSV va caricato direttamente in odoo via UI e
+# NON deve transitare dal repo.
+registro_soci*
+soci_export*
+soci_import*
+soci_per_odoo*
+*_dati_personali*
+*.xlsx
+*.xls
+*.ods
+*.numbers
