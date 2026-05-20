@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_ricevuta_list" model="ir.ui.view">
+        <field name="name">crocevia.ricevuta.list</field>
+        <field name="model">crocevia.ricevuta</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="numero"/>
+                <field name="data"/>
+                <field name="partner_id"/>
+                <field name="tipo" widget="badge"/>
+                <field name="mese_riferimento" optional="show"/>
+                <field name="importo" widget="monetary" sum="Totale"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="metodo"/>
+                <field name="riferimento" optional="hide"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_crocevia_ricevuta_form" model="ir.ui.view">
+        <field name="name">crocevia.ricevuta.form</field>
+        <field name="model">crocevia.ricevuta</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="numero" string="Numero"/>
+                        <h1>
+                            <field name="numero" readonly="1"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="partner_id"
+                                   options="{'no_create_edit': True}"/>
+                            <field name="data"/>
+                            <field name="tipo"/>
+                            <field name="mese_riferimento"
+                                   placeholder="YYYY-MM"
+                                   invisible="tipo not in ('contributo_mensile','quota_annuale')"
+                                   required="tipo in ('contributo_mensile','quota_annuale')"/>
+                        </group>
+                        <group>
+                            <field name="importo" widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                            <field name="metodo"/>
+                            <field name="riferimento"/>
+                            <field name="account_move_id"
+                                   invisible="not account_move_id"/>
+                        </group>
+                    </group>
+                    <group string="Note">
+                        <field name="note" nolabel="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crocevia_ricevuta_search" model="ir.ui.view">
+        <field name="name">crocevia.ricevuta.search</field>
+        <field name="model">crocevia.ricevuta</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="numero"/>
+                <field name="partner_id"/>
+                <field name="mese_riferimento"/>
+                <field name="tipo"/>
+                <field name="riferimento"/>
+                <separator/>
+                <filter string="Anno corrente" name="filter_anno_corrente"
+                        domain="[('data', '&gt;=', (context_today() - relativedelta(month=1, day=1)).strftime('%Y-%m-%d')), ('data', '&lt;', (context_today() + relativedelta(years=1, month=1, day=1)).strftime('%Y-%m-%d'))]"/>
+                <filter string="Mese corrente" name="filter_mese_corrente"
+                        domain="[('data', '&gt;=', (context_today() - relativedelta(day=1)).strftime('%Y-%m-%d')), ('data', '&lt;', (context_today() + relativedelta(months=1, day=1)).strftime('%Y-%m-%d'))]"/>
+                <separator/>
+                <filter string="Quote annuali" name="filter_tipo_quota"
+                        domain="[('tipo', '=', 'quota_annuale')]"/>
+                <filter string="Mensilita'" name="filter_tipo_mensile"
+                        domain="[('tipo', '=', 'contributo_mensile')]"/>
+                <filter string="Oboli" name="filter_tipo_obolo"
+                        domain="[('tipo', '=', 'obolo_giornaliero')]"/>
+                <filter string="Eventi" name="filter_tipo_evento"
+                        domain="[('tipo', '=', 'contributo_evento')]"/>
+                <filter string="Donazioni" name="filter_tipo_donazione"
+                        domain="[('tipo', '=', 'donazione')]"/>
+                <group expand="0" string="Raggruppa per">
+                    <filter string="Socio" name="group_partner"
+                            context="{'group_by': 'partner_id'}"/>
+                    <filter string="Tipo" name="group_tipo"
+                            context="{'group_by': 'tipo'}"/>
+                    <filter string="Mese riferimento" name="group_mese"
+                            context="{'group_by': 'mese_riferimento'}"/>
+                    <filter string="Metodo" name="group_metodo"
+                            context="{'group_by': 'metodo'}"/>
+                    <filter string="Mese (data)" name="group_data_mese"
+                            context="{'group_by': 'data:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_crocevia_ricevuta" model="ir.actions.act_window">
+        <field name="name">Ricevute</field>
+        <field name="res_model">crocevia.ricevuta</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_anno_corrente': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessuna ricevuta ancora registrata.
+            </p>
+            <p>
+                Le ricevute si emettono di solito dalla scheda del socio
+                tramite i bottoni "Obolo +2€", "Mensilita'", "Evento"
+                e "Quota annuale". Da qui invece vedi lo storico
+                cumulativo e puoi filtrare per mese, socio, tipo o metodo
+                di pagamento.
+            </p>
+        </field>
+    </record>
+
+</odoo>

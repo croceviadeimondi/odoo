@@ -26,6 +26,12 @@
               action="action_crocevia_carica"
               sequence="30"/>
 
+    <menuitem id="menu_crocevia_ricevute"
+              name="Ricevute"
+              parent="menu_crocevia_root"
+              action="action_crocevia_ricevuta"
+              sequence="35"/>
+
     <menuitem id="menu_crocevia_verbali"
               name="Verbali"
               parent="menu_crocevia_root"

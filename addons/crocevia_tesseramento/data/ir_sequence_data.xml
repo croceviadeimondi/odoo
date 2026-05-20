@@ -18,5 +18,21 @@
             <field name="number_next_actual">1</field>
             <field name="implementation">standard</field>
         </record>
+
+        <!--
+            Sequenza per il numero ricevuta non fiscale.
+            Formato: RIC/YYYY/NNNN, range per anno.
+        -->
+        <record id="seq_crocevia_ricevuta" model="ir.sequence">
+            <field name="name">Ricevuta Crocevia</field>
+            <field name="code">crocevia.ricevuta</field>
+            <field name="prefix">RIC/%(year)s/</field>
+            <field name="suffix"></field>
+            <field name="padding">4</field>
+            <field name="number_increment">1</field>
+            <field name="number_next_actual">1</field>
+            <field name="use_date_range" eval="True"/>
+            <field name="implementation">standard</field>
+        </record>
     </data>
 </odoo>

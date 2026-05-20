@@ -42,3 +42,9 @@ msgstr "Cariche direttive"
 #: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_verbale
 msgid "Verbali"
 msgstr "Verbali"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_ricevute
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_ricevuta
+msgid "Ricevute"
+msgstr "Ricevute"

@@ -43,6 +43,8 @@ class ResPartner(models.Model):
     data_cessazione = fields.Date(string="Data cessazione")
     carica_ids = fields.One2many(
         'crocevia.carica', 'partner_id', string="Cariche direttive")
+    ricevuta_ids = fields.One2many(
+        'crocevia.ricevuta', 'partner_id', string="Ricevute")
     carica_attuale = fields.Char(
         string="Carica in corso",
         compute='_compute_carica_attuale',
@@ -81,3 +83,68 @@ class ResPartner(models.Model):
                 'data_cessazione': partner.data_cessazione
                     or fields.Date.context_today(partner),
             })
+
+    # ----------------- ricevute: bottoni quick-action -----------------
+
+    def action_registra_obolo(self):
+        """Obolo da 2 EUR (fisso), in contanti, registrato in 1 click."""
+        self.ensure_one()
+        importo = self._param_importo('crocevia_tesseramento.importo_obolo', 2.0)
+        ricevuta = self.env['crocevia.ricevuta'].create({
+            'partner_id': self.id,
+            'tipo': 'obolo_giornaliero',
+            'importo': importo,
+            'metodo': 'contanti',
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Ricevuta obolo',
+            'res_model': 'crocevia.ricevuta',
+            'res_id': ricevuta.id,
+            'view_mode': 'form',
+            'target': 'current',
+        }
+
+    def action_registra_mensilita(self):
+        """Apre wizard mensilita' (mese e importo modificabili)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registra contributo mensile',
+            'res_model': 'crocevia.ricevuta.mensilita.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_registra_evento(self):
+        """Apre wizard evento (importo modificabile, default 3 EUR)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registra contributo evento',
+            'res_model': 'crocevia.ricevuta.evento.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_registra_quota_annuale(self):
+        """Apre wizard quota annuale (10 EUR di default, copre 1a mensilita')."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registra quota annuale',
+            'res_model': 'crocevia.ricevuta.quota.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }
+
+    def _param_importo(self, key, fallback):
+        """Legge un importo dai parametri di sistema con fallback float."""
+        try:
+            return float(self.env['ir.config_parameter'].sudo()
+                         .get_param(key, str(fallback)))
+        except (TypeError, ValueError):
+            return float(fallback)

@@ -17,6 +17,20 @@
                             string="Cessa socio"
                             invisible="stato_socio == 'cessato' or not is_socio"
                             confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
+                    <!-- Quick-action ricevute. Visibili solo per soci attivi. -->
+                    <button name="action_registra_obolo" type="object"
+                            string="Obolo +2€"
+                            invisible="stato_socio != 'attivo'"
+                            confirm="Registro un obolo da 2€ in contanti?"/>
+                    <button name="action_registra_mensilita" type="object"
+                            string="Mensilità"
+                            invisible="stato_socio != 'attivo'"/>
+                    <button name="action_registra_evento" type="object"
+                            string="Evento"
+                            invisible="stato_socio != 'attivo'"/>
+                    <button name="action_registra_quota_annuale" type="object"
+                            string="Quota annuale"
+                            invisible="stato_socio != 'attivo'"/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"
                            statusbar_visible="richiesta,attivo,cessato"/>
@@ -46,6 +60,20 @@
                             <field name="data_scadenza"/>
                             <field name="is_attuale" readonly="1" optional="show"/>
                             <field name="note" optional="hide"/>
+                        </list>
+                    </field>
+                </page>
+                <page string="Ricevute" name="ricevute"
+                      invisible="not is_socio">
+                    <field name="ricevuta_ids" readonly="1">
+                        <list decoration-info="tipo == 'donazione'">
+                            <field name="numero"/>
+                            <field name="data"/>
+                            <field name="tipo" widget="badge"/>
+                            <field name="mese_riferimento" optional="show"/>
+                            <field name="importo" widget="monetary" sum="Totale"/>
+                            <field name="currency_id" column_invisible="1"/>
+                            <field name="metodo"/>
                         </list>
                     </field>
                 </page>
