@@ -24,8 +24,8 @@ msgstr "Cassa"
 
 #. module: crocevia_navigazione
 #: model:ir.ui.menu,name:crocevia_navigazione.menu_atti_root
-msgid "Atti"
-msgstr "Atti"
+msgid "Assemblee"
+msgstr "Assemblee"
 
 #. module: crocevia_navigazione
 #: model:ir.ui.menu,name:crocevia_navigazione.menu_volontariato_root

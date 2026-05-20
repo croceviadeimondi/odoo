@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Rinomina il root "Atti" (creato da crocevia_navigazione) in
+         "Assemblee". Il rename effettivo della chiave it_IT del jsonb
+         e' gestito da un post_init_hook (vedi `hooks.py` di
+         crocevia_navigazione) per evitare di toccare en_US solo. -->
+    <record id="crocevia_navigazione.menu_atti_root" model="ir.ui.menu">
+        <field name="name">Assemblee</field>
+    </record>
+
+    <!-- Sotto-menu di Assemblee.
+         Posizioni:
+            10  Verbali (gia' creato da crocevia_tesseramento, ricolloco
+                       e ribattezzo sequence)
+            20  Resoconti
+            30  Sondaggi
+         -->
+
+    <record id="crocevia_tesseramento.menu_crocevia_verbali" model="ir.ui.menu">
+        <field name="sequence">10</field>
+    </record>
+
+    <menuitem id="menu_crocevia_resoconto"
+              name="Resoconti"
+              parent="crocevia_navigazione.menu_atti_root"
+              action="action_crocevia_resoconto"
+              sequence="20"/>
+
+    <menuitem id="menu_crocevia_sondaggio"
+              name="Sondaggi"
+              parent="crocevia_navigazione.menu_atti_root"
+              action="action_crocevia_sondaggio"
+              sequence="30"/>
+
+</odoo>

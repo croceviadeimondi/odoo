@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_crocevia_sondaggio_direttivo,crocevia.sondaggio direttivo,model_crocevia_sondaggio,crocevia_tesseramento.group_crocevia_direttivo,1,1,1,1
+access_crocevia_sondaggio_data_direttivo,crocevia.sondaggio.data direttivo,model_crocevia_sondaggio_data,crocevia_tesseramento.group_crocevia_direttivo,1,1,1,1
+access_crocevia_sondaggio_voto_direttivo,crocevia.sondaggio.voto direttivo,model_crocevia_sondaggio_voto,crocevia_tesseramento.group_crocevia_direttivo,1,1,1,1
+access_crocevia_sondaggio_user_ro,crocevia.sondaggio internal user,model_crocevia_sondaggio,base.group_user,1,0,0,0
+access_crocevia_sondaggio_data_user_ro,crocevia.sondaggio.data internal user,model_crocevia_sondaggio_data,base.group_user,1,0,0,0
+access_crocevia_sondaggio_voto_user_rw,crocevia.sondaggio.voto internal user,model_crocevia_sondaggio_voto,base.group_user,1,1,1,1

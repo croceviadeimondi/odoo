@@ -24,3 +24,13 @@ def applica_lessico_navigazione(env):
             "crocevia_navigazione: rinominato menu 'Contatti' in "
             "'Tutti i contatti' (it_IT)."
         )
+    # menu_atti_root e' stato creato come "Atti", lo rinominiamo in
+    # "Assemblee" (it_IT) cosi' i db gia' migrati si aggiornano senza
+    # bisogno di reinstall del modulo.
+    menu_atti = env.ref('crocevia_navigazione.menu_atti_root',
+                        raise_if_not_found=False)
+    if menu_atti:
+        menu_atti.with_context(lang='it_IT').write({'name': 'Assemblee'})
+        _logger.info(
+            "crocevia_navigazione: rinominato menu 'Atti' in 'Assemblee'."
+        )

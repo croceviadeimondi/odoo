@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_sondaggio_list" model="ir.ui.view">
+        <field name="name">crocevia.sondaggio.list</field>
+        <field name="model">crocevia.sondaggio</field>
+        <field name="arch" type="xml">
+            <list decoration-info="stato == 'aperto'"
+                  decoration-muted="stato in ('chiuso', 'annullato')">
+                <field name="name"/>
+                <field name="data_creazione"/>
+                <field name="data_chiusura"/>
+                <field name="stato" widget="badge"
+                       decoration-info="stato == 'aperto'"
+                       decoration-success="stato == 'chiuso'"
+                       decoration-muted="stato in ('bozza', 'annullato')"/>
+                <field name="num_voti_totali"/>
+                <field name="data_vincente" optional="show"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_crocevia_sondaggio_form" model="ir.ui.view">
+        <field name="name">crocevia.sondaggio.form</field>
+        <field name="model">crocevia.sondaggio</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_pubblica" type="object"
+                            string="Pubblica" class="oe_highlight"
+                            invisible="stato != 'bozza'"/>
+                    <button name="action_chiudi_manuale" type="object"
+                            string="Chiudi ora"
+                            invisible="stato != 'aperto'"
+                            confirm="Chiudere il sondaggio adesso? La data vincente verra' calcolata sui voti attuali."/>
+                    <button name="action_annulla" type="object"
+                            string="Annulla"
+                            invisible="stato in ('chiuso', 'annullato')"
+                            confirm="Annullare il sondaggio?"/>
+                    <field name="stato" widget="statusbar"
+                           statusbar_visible="bozza,aperto,chiuso"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <label for="name"/>
+                        <h1>
+                            <field name="name"
+                                   placeholder="Es. Data assemblea ordinaria di maggio"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="data_creazione" readonly="1"/>
+                            <field name="data_chiusura"
+                                   readonly="stato in ('chiuso', 'annullato')"/>
+                            <field name="data_vincente" readonly="1"
+                                   invisible="stato != 'chiuso'"/>
+                        </group>
+                        <group>
+                            <field name="num_voti_totali" readonly="1"/>
+                            <field name="email_inviata" readonly="1"
+                                   invisible="stato != 'chiuso'"/>
+                            <field name="telegram_message_id" readonly="1"
+                                   invisible="not telegram_message_id"/>
+                        </group>
+                    </group>
+                    <group string="Descrizione (opzionale)">
+                        <field name="descrizione" nolabel="1"
+                               placeholder="Contesto, ordine del giorno proposto, ecc."/>
+                    </group>
+                    <notebook>
+                        <page string="Date proposte" name="date">
+                            <field name="data_proposta_ids"
+                                   readonly="stato in ('chiuso', 'annullato')">
+                                <list editable="bottom">
+                                    <field name="data"/>
+                                    <field name="note"/>
+                                    <field name="num_voti" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Voti" name="voti">
+                            <field name="voto_ids" readonly="stato != 'aperto'">
+                                <list editable="bottom">
+                                    <field name="partner_id"/>
+                                    <field name="data_proposta_id"/>
+                                    <field name="create_date" readonly="1" optional="show"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crocevia_sondaggio_search" model="ir.ui.view">
+        <field name="name">crocevia.sondaggio.search</field>
+        <field name="model">crocevia.sondaggio</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <filter string="Aperti" name="filter_aperti"
+                        domain="[('stato', '=', 'aperto')]"/>
+                <filter string="Chiusi" name="filter_chiusi"
+                        domain="[('stato', '=', 'chiuso')]"/>
+                <filter string="In bozza" name="filter_bozze"
+                        domain="[('stato', '=', 'bozza')]"/>
+                <group expand="0" string="Raggruppa per">
+                    <filter string="Stato" name="group_stato"
+                            context="{'group_by': 'stato'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_crocevia_sondaggio" model="ir.actions.act_window">
+        <field name="name">Sondaggi</field>
+        <field name="res_model">crocevia.sondaggio</field>
+        <field name="view_mode">list,form</field>
+        <field name="context">{'search_default_filter_aperti': 1, 'search_default_filter_bozze': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessun sondaggio aperto.
+            </p>
+            <p>
+                Crea un sondaggio con date proposte per scegliere quando
+                fare la prossima assemblea/riunione. Default: scadenza 4
+                giorni, chiusura automatica via cron orario.
+            </p>
+        </field>
+    </record>
+
+</odoo>

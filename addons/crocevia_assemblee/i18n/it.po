@@ -1,0 +1,21 @@
+# Traduzioni IT del modulo crocevia_assemblee.
+msgid ""
+msgstr ""
+"Project-Id-Version: crocevia_assemblee 18.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: crocevia_assemblee
+#: model:ir.ui.menu,name:crocevia_assemblee.menu_crocevia_resoconto
+#: model:ir.actions.act_window,name:crocevia_assemblee.action_crocevia_resoconto
+msgid "Resoconti"
+msgstr "Resoconti"
+
+#. module: crocevia_assemblee
+#: model:ir.ui.menu,name:crocevia_assemblee.menu_crocevia_sondaggio
+#: model:ir.actions.act_window,name:crocevia_assemblee.action_crocevia_sondaggio
+msgid "Sondaggi"
+msgstr "Sondaggi"
