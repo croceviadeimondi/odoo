@@ -32,4 +32,24 @@
               action="action_crocevia_verbale"
               sequence="40"/>
 
+    <!-- Icone dei menu. Lo shorthand <menuitem> non accetta web_icon
+         nel validator RNG di odoo 18, quindi lo impostiamo come campo
+         tramite <record> di update. Le immagini stanno in
+         static/description/ del modulo. -->
+    <record id="menu_crocevia_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_tesseramento,static/description/icon.png</field>
+    </record>
+    <record id="menu_crocevia_soci" model="ir.ui.menu">
+        <field name="web_icon">crocevia_tesseramento,static/description/icon_soci.png</field>
+    </record>
+    <record id="menu_crocevia_richieste" model="ir.ui.menu">
+        <field name="web_icon">crocevia_tesseramento,static/description/icon_richieste.png</field>
+    </record>
+    <record id="menu_crocevia_cariche" model="ir.ui.menu">
+        <field name="web_icon">crocevia_tesseramento,static/description/icon_cariche.png</field>
+    </record>
+    <record id="menu_crocevia_verbali" model="ir.ui.menu">
+        <field name="web_icon">crocevia_tesseramento,static/description/icon_verbali.png</field>
+    </record>
+
 </odoo>
