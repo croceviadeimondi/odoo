@@ -94,30 +94,6 @@
         <field name="sequence">30</field>
     </record>
 
-    <!-- Note spese (`hr_expense`) diventa sotto-voce di Cassa -->
-    <record id="hr_expense.menu_hr_expense_root" model="ir.ui.menu">
-        <field name="parent_id" ref="menu_cassa_root"/>
-        <field name="sequence">20</field>
-    </record>
-
-    <!-- Volontari (ex Dipendenti, `hr`) diventa sotto-voce di Volontariato -->
-    <record id="hr.menu_hr_root" model="ir.ui.menu">
-        <field name="parent_id" ref="menu_volontariato_root"/>
-        <field name="sequence">10</field>
-    </record>
-
-    <!-- Fogli ore (`hr_timesheet`, "Registri lavori") sotto Volontariato -->
-    <record id="hr_timesheet.timesheet_menu_root" model="ir.ui.menu">
-        <field name="parent_id" ref="menu_volontariato_root"/>
-        <field name="sequence">20</field>
-    </record>
-
-    <!-- Presenze (`hr_attendance`) sotto Volontariato -->
-    <record id="hr_attendance.menu_hr_attendance_root" model="ir.ui.menu">
-        <field name="parent_id" ref="menu_volontariato_root"/>
-        <field name="sequence">30</field>
-    </record>
-
     <!-- Da fare (`project_todo`) sotto Progetti -->
     <record id="project_todo.menu_todo_todos" model="ir.ui.menu">
         <field name="parent_id" ref="project.menu_main_pm"/>

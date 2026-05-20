@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Ruolo direttivo unificato",
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'summary': "Gruppo 'Direttivo del Crocevia' che ingloba i permessi gestionali",
     'description': """
 Modulo di configurazione: definisce un singolo gruppo "Direttivo del
@@ -38,8 +38,6 @@ Impostazioni > Utenti > Diritti d'accesso > Crocevia dei Mondi.
         'contacts',
         'mail',
         'account',
-        'hr',
-        'hr_expense',
         'crocevia_tesseramento',
         'crocevia_inventario',
     ],

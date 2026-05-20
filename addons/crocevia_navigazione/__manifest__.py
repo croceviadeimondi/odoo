@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Riorganizzazione menu",
-    'version': '18.0.1.0.0',
+    'version': '18.0.2.0.0',
     'summary': "Raggruppa i menu di Odoo per funzione: Soci, Cassa, Atti, Volontariato",
     'description': """
 Modulo di sola configurazione: ridisegna la barra app di Odoo
@@ -41,10 +41,6 @@ originale (Odoo memorizza solo l'override mentre il modulo e' attivo).
         'calendar',
         'project',
         'project_todo',
-        'hr',
-        'hr_timesheet',
-        'hr_attendance',
-        'hr_expense',
         'spreadsheet_dashboard',
         'crocevia_tesseramento',
         'crocevia_inventario',
