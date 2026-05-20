@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_crocevia_bene_list" model="ir.ui.view">
+        <field name="name">crocevia.bene.list</field>
+        <field name="model">crocevia.bene</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="not active"
+                  decoration-warning="in_prestito">
+                <field name="codice_interno" optional="show"/>
+                <field name="name"/>
+                <field name="categoria" widget="badge"/>
+                <field name="sede_id"/>
+                <field name="autore" optional="hide"/>
+                <field name="editore" optional="hide"/>
+                <field name="anno_pubblicazione" optional="hide"/>
+                <field name="isbn" optional="hide"/>
+                <field name="in_prestito" widget="boolean_toggle"
+                       readonly="1" optional="show"/>
+                <field name="prestatario_id" optional="show"/>
+                <field name="valore_stimato" optional="hide"
+                       widget="monetary" sum="Totale stimato"/>
+                <field name="currency_id" column_invisible="1"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_crocevia_bene_form" model="ir.ui.view">
+        <field name="name">crocevia.bene.form</field>
+        <field name="model">crocevia.bene</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_apri_prestito" type="object"
+                            string="Registra prestito"
+                            class="oe_highlight"
+                            invisible="in_prestito or not active"/>
+                    <button name="action_restituisci_corrente" type="object"
+                            string="Restituito"
+                            invisible="not in_prestito"
+                            confirm="Confermi la restituzione del bene? La data di restituzione sara' impostata a oggi."/>
+                    <field name="in_prestito" widget="statusbar"
+                           options="{'clickable': '0'}"
+                           invisible="1"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="In prestito"
+                            bg_color="text-bg-warning"
+                            invisible="not in_prestito"/>
+                    <widget name="web_ribbon" title="Archiviato"
+                            bg_color="text-bg-danger"
+                            invisible="active"/>
+                    <div class="oe_title">
+                        <label for="name" string="Titolo"/>
+                        <h1>
+                            <field name="name" placeholder="Es. Pathfinder 2e - Core Rulebook"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="categoria"/>
+                            <field name="sede_id"
+                                   options="{'no_create_edit': True}"/>
+                            <field name="codice_interno"/>
+                            <field name="active" invisible="1"/>
+                        </group>
+                        <group>
+                            <field name="autore"/>
+                            <field name="editore"/>
+                            <field name="anno_pubblicazione"/>
+                            <field name="isbn"
+                                   invisible="categoria not in ('libro', 'manuale', 'gioco_di_ruolo')"/>
+                        </group>
+                    </group>
+                    <group string="Valore e note">
+                        <group>
+                            <field name="valore_stimato"
+                                   widget="monetary"/>
+                            <field name="currency_id" invisible="1"/>
+                        </group>
+                    </group>
+                    <group>
+                        <field name="note" nolabel="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Storico prestiti" name="prestiti">
+                            <field name="prestito_ids" readonly="1">
+                                <list decoration-warning="stato == 'in_ritardo'"
+                                      decoration-muted="stato == 'restituito'">
+                                    <field name="data_prestito"/>
+                                    <field name="partner_id"/>
+                                    <field name="data_restituzione_prevista"/>
+                                    <field name="data_restituzione_effettiva"/>
+                                    <field name="stato" widget="badge"
+                                           decoration-success="stato == 'restituito'"
+                                           decoration-warning="stato == 'in_ritardo'"
+                                           decoration-info="stato == 'attivo'"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_crocevia_bene_search" model="ir.ui.view">
+        <field name="name">crocevia.bene.search</field>
+        <field name="model">crocevia.bene</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="codice_interno"/>
+                <field name="autore"/>
+                <field name="sede_id"/>
+                <field name="categoria"/>
+                <filter string="In prestito" name="filter_in_prestito"
+                        domain="[('in_prestito', '=', True)]"/>
+                <filter string="Disponibili" name="filter_disponibili"
+                        domain="[('in_prestito', '=', False)]"/>
+                <separator/>
+                <filter string="Giochi" name="filter_giochi"
+                        domain="[('categoria', 'in', ['gioco_da_tavolo', 'gioco_di_ruolo'])]"/>
+                <filter string="Libri" name="filter_libri"
+                        domain="[('categoria', '=', 'libro')]"/>
+                <filter string="Manuali" name="filter_manuali"
+                        domain="[('categoria', '=', 'manuale')]"/>
+                <separator/>
+                <filter string="Archiviati" name="filter_archived"
+                        domain="[('active', '=', False)]"/>
+                <group expand="0" string="Raggruppa per">
+                    <filter string="Sede" name="group_sede"
+                            context="{'group_by': 'sede_id'}"/>
+                    <filter string="Categoria" name="group_categoria"
+                            context="{'group_by': 'categoria'}"/>
+                    <filter string="Stato prestito" name="group_prestito"
+                            context="{'group_by': 'in_prestito'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_crocevia_bene" model="ir.actions.act_window">
+        <field name="name">Beni</field>
+        <field name="res_model">crocevia.bene</field>
+        <field name="view_mode">list,form</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Nessun bene registrato nell'inventario.
+            </p>
+            <p>
+                Aggiungi giochi da tavolo, giochi di ruolo, manuali e libri
+                presenti nelle sedi del Crocevia. Puoi importare un elenco
+                gia' esistente da file CSV/Excel (menu Azioni - Importa).
+            </p>
+        </field>
+    </record>
+
+</odoo>

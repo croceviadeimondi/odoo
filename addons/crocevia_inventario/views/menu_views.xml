@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Menu radice "Inventario". Sequence=17 lo colloca subito dopo
+         "Tesseramento" (15) e prima di "Contatti" (20). -->
+    <menuitem id="menu_crocevia_inventario_root"
+              name="Inventario"
+              sequence="17"/>
+
+    <menuitem id="menu_crocevia_inventario_beni"
+              name="Beni"
+              parent="menu_crocevia_inventario_root"
+              action="action_crocevia_bene"
+              sequence="10"/>
+
+    <menuitem id="menu_crocevia_inventario_prestiti"
+              name="Prestiti"
+              parent="menu_crocevia_inventario_root"
+              action="action_crocevia_prestito"
+              sequence="20"/>
+
+    <menuitem id="menu_crocevia_inventario_sedi"
+              name="Sedi"
+              parent="menu_crocevia_inventario_root"
+              action="action_crocevia_sede"
+              sequence="30"/>
+
+    <!-- Icone dei menu: web_icon via <record> di update (vedi nota in
+         crocevia_tesseramento/views/menu_views.xml). -->
+    <record id="menu_crocevia_inventario_root" model="ir.ui.menu">
+        <field name="web_icon">crocevia_inventario,static/description/icon.png</field>
+    </record>
+    <record id="menu_crocevia_inventario_beni" model="ir.ui.menu">
+        <field name="web_icon">crocevia_inventario,static/description/icon_beni.png</field>
+    </record>
+    <record id="menu_crocevia_inventario_prestiti" model="ir.ui.menu">
+        <field name="web_icon">crocevia_inventario,static/description/icon_prestiti.png</field>
+    </record>
+    <record id="menu_crocevia_inventario_sedi" model="ir.ui.menu">
+        <field name="web_icon">crocevia_inventario,static/description/icon_sedi.png</field>
+    </record>
+
+</odoo>

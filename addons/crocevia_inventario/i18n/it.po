@@ -1,0 +1,36 @@
+# Traduzioni italiane del modulo crocevia_inventario.
+# Stesso pattern di crocevia_tesseramento: i nomi sono gia' scritti in
+# italiano nella lingua sorgente (en_US), questo file aggiunge la chiave
+# it_IT al jsonb cosi' i record vengono mostrati correttamente quando
+# la UI e' in italiano.
+msgid ""
+msgstr ""
+"Project-Id-Version: crocevia_inventario 18.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: crocevia_inventario
+#: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_root
+msgid "Inventario"
+msgstr "Inventario"
+
+#. module: crocevia_inventario
+#: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_beni
+#: model:ir.actions.act_window,name:crocevia_inventario.action_crocevia_bene
+msgid "Beni"
+msgstr "Beni"
+
+#. module: crocevia_inventario
+#: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_prestiti
+#: model:ir.actions.act_window,name:crocevia_inventario.action_crocevia_prestito
+msgid "Prestiti"
+msgstr "Prestiti"
+
+#. module: crocevia_inventario
+#: model:ir.ui.menu,name:crocevia_inventario.menu_crocevia_inventario_sedi
+#: model:ir.actions.act_window,name:crocevia_inventario.action_crocevia_sede
+msgid "Sedi"
+msgstr "Sedi"

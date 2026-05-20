@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+
+    <!-- Sedi attuali del Crocevia dei Mondi APS.
+         noupdate="1" cosi' un upgrade del modulo non sovrascrive eventuali
+         modifiche fatte in UI (referente_id, note, etc.). -->
+
+    <record id="sede_barletta" model="crocevia.sede">
+        <field name="citta">Barletta</field>
+        <field name="via">Via Alfieri</field>
+        <field name="civico">9</field>
+        <field name="provincia">BT</field>
+    </record>
+
+    <record id="sede_trani" model="crocevia.sede">
+        <field name="citta">Trani</field>
+        <field name="via">Via Mario Pagano</field>
+        <field name="civico">78</field>
+        <field name="provincia">BT</field>
+    </record>
+
+</odoo>
