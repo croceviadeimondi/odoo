@@ -6,7 +6,8 @@
         <field name="model">crocevia.registro.iscrizione</field>
         <field name="arch" type="xml">
             <list decoration-muted="stato == 'annullato'"
-                  decoration-warning="stato == 'cessato'">
+                  decoration-warning="stato == 'cessato'"
+                  decoration-info="stato_inalterabilita == 'bozza'">
                 <field name="numero_iscrizione" string="N."/>
                 <field name="cognome"/>
                 <field name="nome"/>
@@ -14,6 +15,10 @@
                 <field name="tipo" widget="badge"/>
                 <field name="data_inizio_attivita"/>
                 <field name="data_fine_attivita" optional="show"/>
+                <field name="stato_inalterabilita" widget="badge"
+                       decoration-info="stato_inalterabilita == 'bozza'"
+                       decoration-success="stato_inalterabilita == 'vidimato'"
+                       optional="show"/>
                 <field name="stato" widget="badge"
                        decoration-success="stato == 'iscritto'"
                        decoration-warning="stato == 'cessato'"
@@ -56,47 +61,61 @@
                             invisible="stato != 'cessato'"/>
                     <div class="alert alert-info" role="alert"
                          invisible="numero_iscrizione">
-                        Tutti i campi anagrafici sono <strong>write-once</strong>:
-                        compilali con cura, dopo la creazione non potranno
-                        essere modificati (DM 6 ottobre 2021).
+                        Compila i campi anagrafici. Il record nasce in
+                        <strong>bozza</strong> e potrai modificarlo
+                        finche' non verra' vidimato (firma + marca
+                        temporale del responsabile sul registro).
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not numero_iscrizione or stato_inalterabilita != 'bozza'">
+                        Record in <strong>bozza</strong>: modificabile e
+                        cancellabile fino alla prossima vidimazione del
+                        registro. Le modifiche restano tracciate nel
+                        chatter come audit log.
+                    </div>
+                    <div class="alert alert-success" role="alert"
+                         invisible="stato_inalterabilita != 'vidimato'">
+                        Record <strong>vidimato</strong> e immutabile per
+                        legge (DM 6 ottobre 2021). Per correggere errori,
+                        usa "Annulla iscrizione" con motivazione.
                     </div>
                     <group>
                         <group string="Anagrafica">
                             <field name="partner_id"
-                                   readonly="numero_iscrizione"
+                                   readonly="stato_inalterabilita == 'vidimato'"
                                    options="{'no_create_edit': True}"/>
                             <field name="cognome"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="nome"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="codice_fiscale"
-                                   readonly="numero_iscrizione"
+                                   readonly="stato_inalterabilita == 'vidimato'"
                                    placeholder="RSSMRA80A01H501U"/>
                             <field name="data_nascita"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="luogo_nascita"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                         </group>
                         <group string="Residenza">
                             <field name="indirizzo_residenza"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="cap_residenza"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="citta_residenza"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="provincia_residenza"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                         </group>
                     </group>
                     <group>
                         <group string="Volontariato">
                             <field name="tipo"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="data_inizio_attivita"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                             <field name="data_fine_attivita" readonly="1"/>
                             <field name="consenso_privacy_data"
-                                   readonly="numero_iscrizione"/>
+                                   readonly="stato_inalterabilita == 'vidimato'"/>
                         </group>
                         <group string="Integrita'"
                                invisible="not numero_iscrizione">
@@ -106,7 +125,7 @@
                     </group>
                     <group string="Attivita' svolta">
                         <field name="attivita_svolta" nolabel="1"
-                               readonly="numero_iscrizione"/>
+                               readonly="stato_inalterabilita == 'vidimato'"/>
                     </group>
                     <group string="Annullamento"
                            invisible="not annullamento_id">
@@ -133,6 +152,11 @@
                         domain="[('stato', '=', 'cessato')]"/>
                 <filter string="Annullati" name="filter_annullati"
                         domain="[('stato', '=', 'annullato')]"/>
+                <separator/>
+                <filter string="In bozza" name="filter_bozza"
+                        domain="[('stato_inalterabilita', '=', 'bozza')]"/>
+                <filter string="Vidimati" name="filter_vidimato"
+                        domain="[('stato_inalterabilita', '=', 'vidimato')]"/>
                 <separator/>
                 <filter string="Abituali" name="filter_abituali"
                         domain="[('tipo', '=', 'abituale')]"/>

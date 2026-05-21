@@ -1,19 +1,33 @@
 """
 Modello `crocevia.registro.iscrizione`: una riga del registro volontari.
 
-Caratteristiche cruciali per la conformita' al DM 6 ottobre 2021 e
-all'art. 2215-bis cc:
+Modello "alterabile fino alla vidimazione" (v1.1, allineato alla prassi
+dei libri contabili ex art. 2215-bis cc):
 
-1. **Write-once**: i campi anagrafici e di iscrizione sono congelati
-   alla creazione. L'override di `write()` blocca le modifiche,
-   `unlink()` lancia sempre errore.
-2. **Hash chain**: ogni record ha un `hash_record` SHA-256 calcolato sui
-   campi anagrafici + `hash_precedente`, dove `hash_precedente` =
-   `hash_record` del record con numero immediatamente precedente. Cosi'
-   una manomissione SQL diretta rompe la catena e si rileva con
-   l'azione "Verifica catena".
-3. **Numerazione progressiva mai riusata**: anche se un'iscrizione
-   viene annullata, il suo numero resta occupato.
+1. **Stato `bozza`**: subito dopo `create`, il record e' modificabile e
+   cancellabile come un normale record Odoo. Il chatter traccia ogni
+   modifica (audit log) ma il record stesso non e' ancora "fissato".
+2. **Stato `vidimato`**: quando il responsabile chiude una vidimazione
+   (firma + marca temporale sul PDF snapshot), tutti i record in `bozza`
+   vengono congelati: la `write()` blocca modifiche ai campi anagrafici,
+   la `unlink()` lancia errore, e in quel momento si calcola la
+   **hash chain** SHA-256 (`hash_record` + `hash_precedente`) cosi' la
+   catena rappresenta lo stato consolidato del registro alla data di
+   vidimazione. Manomissioni SQL successive vengono rilevate da
+   "Verifica catena".
+3. **Numerazione progressiva mai riusata**: anche se un record viene
+   cancellato in bozza o annullato dopo la vidimazione, il numero
+   resta occupato. La sequenza `crocevia.registro.volontario` non e'
+   reversibile.
+4. **Data di apposizione**: il significato di "data certa" del DM
+   6/10/2021 e' soddisfatto dalla marca temporale sulla vidimazione
+   (RFC 3161 PAdES-T) che congela lo stato del registro alla data X.
+   Pre-vidimazione: chatter Odoo per l'audit. Post-vidimazione:
+   inalterabilita' enforced.
+
+Questo allineamento richiede vidimazione **almeno annuale** (art.
+2215-bis cc): il cron mensile + il gate sul `create` (>12 mesi senza
+vidimare = blocco) lo garantiscono.
 """
 
 import hashlib
@@ -36,6 +50,16 @@ STATO_SELECTION = [
     ('cessato', 'Cessato'),
     ('annullato', 'Annullato'),
 ]
+
+STATO_INALTERABILITA_SELECTION = [
+    ('bozza', 'Bozza (modificabile)'),
+    ('vidimato', 'Vidimato (immutabile)'),
+]
+
+# Context flag che il codice di vidimazione setta per poter scrivere
+# i campi normalmente write-once (hash_record, hash_precedente,
+# stato_inalterabilita) durante la chiusura della vidimazione stessa.
+CTX_VIDIMAZIONE_IN_CORSO = 'crocevia_vidimazione_in_corso'
 
 # Regex CF persona fisica italiano standard (16 caratteri alfanumerici).
 # Non valida il check digit ma e' sufficiente per il filtro di input.
@@ -161,6 +185,19 @@ class CroceviaRegistroIscrizione(models.Model):
         store=True,
         index=True,
     )
+    stato_inalterabilita = fields.Selection(
+        selection=STATO_INALTERABILITA_SELECTION,
+        string="Inalterabilita'",
+        default='bozza',
+        required=True,
+        index=True,
+        copy=False,
+        tracking=True,
+        help="In bozza: il record e' modificabile e cancellabile. Una "
+             "volta vidimato (firma + marca temporale sulla vidimazione "
+             "che lo include nello snapshot), diventa immutabile per "
+             "legge (DM 6/10/2021).",
+    )
 
     # ----------------- computed -----------------
 
@@ -222,36 +259,22 @@ class CroceviaRegistroIscrizione(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
-        # Controllo che esista una vidimazione recente o che sia la prima
-        # iscrizione in assoluto (art. 2215-bis cc, vedi sezione 5.6 SPEC).
+        # Gate art. 2215-bis cc: blocca nuovi inserimenti se l'ultima
+        # vidimazione e' >12 mesi fa (vidimazione annuale obbligatoria).
         self._verifica_vidimazione_recente()
 
-        records = self.env['crocevia.registro.iscrizione']
         Sequence = self.env['ir.sequence']
         for vals in vals_list:
-            # Normalizza CF in maiuscolo prima di salvare.
             if vals.get('codice_fiscale'):
                 vals['codice_fiscale'] = vals['codice_fiscale'].upper().strip()
-
-            # Numero progressivo dalla sequenza dedicata.
+            # Numero progressivo dalla sequenza, mai riusato.
             if not vals.get('numero_iscrizione'):
                 next_n = Sequence.next_by_code('crocevia.registro.volontario')
                 vals['numero_iscrizione'] = int(next_n) if next_n else 1
-
-            # Hash precedente = hash del record con numero precedente
-            # (se esiste). Per il primo record: hash_precedente = 0*64.
-            prev = self.search([
-                ('numero_iscrizione', '<', vals['numero_iscrizione']),
-            ], order='numero_iscrizione desc', limit=1)
-            vals['hash_precedente'] = prev.hash_record if prev else HASH_ZERO
-
-            # Hash del record stesso. Calcoliamo dal payload dei vals
-            # (non da self perche' il record non esiste ancora).
-            vals['hash_record'] = self._calcola_hash_da_vals(vals)
-
-            rec = super().create([vals])
-            records |= rec
-        return records
+            # Stato inalterabilita': default 'bozza'. Hash chain calcolata
+            # solo al momento della vidimazione, non qui.
+            vals.setdefault('stato_inalterabilita', 'bozza')
+        return super().create(vals_list)
 
     @staticmethod
     def _campi_in_hash():
@@ -287,9 +310,14 @@ class CroceviaRegistroIscrizione(models.Model):
         return self._calcola_hash_da_vals(vals)
 
     def action_verifica_catena(self):
-        """Ricalcola tutti gli hash della catena e mostra il primo
-        punto di rottura, se esiste. Read-only sul DB."""
-        record_ordinati = self.search([], order='numero_iscrizione asc')
+        """Ricalcola gli hash della catena dei record vidimati e mostra
+        il primo punto di rottura, se esiste. I record in bozza non
+        partecipano alla catena (la catena viene costruita solo alla
+        vidimazione)."""
+        record_ordinati = self.search(
+            [('stato_inalterabilita', '=', 'vidimato')],
+            order='numero_iscrizione asc',
+        )
         hash_attesa_precedente = HASH_ZERO
         rotture = []
         for r in record_ordinati:
@@ -307,16 +335,58 @@ class CroceviaRegistroIscrizione(models.Model):
                 "Catena di integrita' rotta al record n. %s: %s. "
                 "Possibile manomissione del DB. Totale anomalie: %d."
             ) % (primo_n, primo_msg, len(rotture)))
+        n_bozza = self.search_count([('stato_inalterabilita', '=', 'bozza')])
         return {
             'type': 'ir.actions.client',
             'tag': 'display_notification',
             'params': {
                 'title': _("Catena integra"),
-                'message': _("Verificati %d record. Hash chain valida.") % len(record_ordinati),
+                'message': _(
+                    "Verificati %d record vidimati. Hash chain valida. "
+                    "%d record in bozza (non ancora vidimati: saranno "
+                    "congelati alla prossima vidimazione)."
+                ) % (len(record_ordinati), n_bozza),
                 'type': 'success',
                 'sticky': False,
             },
         }
+
+    def _congela_bozza_per_vidimazione(self):
+        """Chiamato dalla `crocevia.registro.vidimazione.action_verifica_firma`
+        quando una vidimazione viene chiusa. Trova tutti i record in
+        stato 'bozza' e li congela:
+        - calcola hash_record e hash_precedente
+        - setta stato_inalterabilita='vidimato'
+        Restituisce il numero di record congelati."""
+        Isc = self.with_context(**{CTX_VIDIMAZIONE_IN_CORSO: True})
+        bozza = Isc.search(
+            [('stato_inalterabilita', '=', 'bozza')],
+            order='numero_iscrizione asc',
+        )
+        if not bozza:
+            return 0
+        # Trovo l'ultimo record vidimato per partire la catena.
+        ultimo_vidimato = Isc.search(
+            [('stato_inalterabilita', '=', 'vidimato')],
+            order='numero_iscrizione desc', limit=1,
+        )
+        prev_hash = ultimo_vidimato.hash_record if ultimo_vidimato else HASH_ZERO
+
+        for rec in bozza:
+            # Calcolo hash usando il payload corrente del record +
+            # l'hash precedente. Devo simulare i vals.
+            vals_hash = {
+                k: rec[k] if k != 'hash_precedente' else prev_hash
+                for k in rec._campi_in_hash()
+            }
+            new_hash = rec._calcola_hash_da_vals(vals_hash)
+            rec.write({
+                'hash_precedente': prev_hash,
+                'hash_record': new_hash,
+                'stato_inalterabilita': 'vidimato',
+            })
+            prev_hash = new_hash
+        return len(bozza)
 
     # ----------------- WRITE-ONCE -----------------
 
@@ -330,15 +400,34 @@ class CroceviaRegistroIscrizione(models.Model):
     })
 
     def write(self, vals):
-        violazioni = set(vals.keys()) & self._CAMPI_WRITE_ONCE
-        if violazioni:
-            raise UserError(_(
-                "Il registro dei volontari e' inalterabile per legge "
-                "(DM 6 ottobre 2021). Campi non modificabili: %s. "
-                "Per correggere un errore, annullare la riga e crearne "
-                "una nuova."
-            ) % ", ".join(sorted(violazioni)))
-        # data_fine_attivita: modificabile solo se attualmente vuota.
+        # Bypass per il codice di vidimazione che deve scrivere
+        # hash_record, hash_precedente, stato_inalterabilita al momento
+        # della chiusura della vidimazione stessa.
+        if self.env.context.get(CTX_VIDIMAZIONE_IN_CORSO):
+            return super().write(vals)
+
+        # Per i record vidimati: applichiamo il write-once classico.
+        record_vidimati = self.filtered(
+            lambda r: r.stato_inalterabilita == 'vidimato')
+        if record_vidimati:
+            violazioni = set(vals.keys()) & self._CAMPI_WRITE_ONCE
+            if violazioni:
+                raise UserError(_(
+                    "Il record n. %s e' gia' stato vidimato (firma + "
+                    "marca temporale apposta al registro): non puo' "
+                    "essere modificato per legge (DM 6 ottobre 2021). "
+                    "Campi non modificabili: %s. Per correggere un "
+                    "errore su un record vidimato, usa 'Annulla "
+                    "iscrizione' con motivazione."
+                ) % (
+                    ', '.join('%06d' % r.numero_iscrizione
+                              for r in record_vidimati),
+                    ", ".join(sorted(violazioni)),
+                ))
+
+        # `data_fine_attivita`: una volta valorizzata, non si modifica
+        # piu', anche se il record e' ancora in bozza (rappresenta
+        # la cessazione dell'attivita', usare wizard ad hoc).
         if 'data_fine_attivita' in vals and vals['data_fine_attivita']:
             for rec in self:
                 if rec.data_fine_attivita:
@@ -351,11 +440,17 @@ class CroceviaRegistroIscrizione(models.Model):
         return super().write(vals)
 
     def unlink(self):
-        raise UserError(_(
-            "Il registro dei volontari non ammette cancellazioni. "
-            "Per correggere un errore, usa 'Annulla iscrizione' con "
-            "motivazione."
-        ))
+        # Record bozza: cancellabili (la numerazione resta occupata,
+        # ma il record sparisce). Vidimati: errore.
+        bloccati = self.filtered(
+            lambda r: r.stato_inalterabilita == 'vidimato')
+        if bloccati:
+            raise UserError(_(
+                "Il/i record n. %s e' gia' vidimato e non puo' essere "
+                "cancellato. Per correggere un errore, usa 'Annulla "
+                "iscrizione' con motivazione."
+            ) % ', '.join('%06d' % r.numero_iscrizione for r in bloccati))
+        return super().unlink()
 
     # ----------------- vidimazione: check pre-create -----------------
 

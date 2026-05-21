@@ -240,11 +240,19 @@ class CroceviaRegistroVidimazione(models.Model):
                 "v1.0: la verifica e' dichiarata dal responsabile. "
                 "v2.0 verifichera' crittograficamente con pyHanko."
             ) % ", ".join(mancanti))
+        # Congela i record `bozza`: calcola hash chain + passa a
+        # 'vidimato'. Questo congelamento "fotografa" lo stato del
+        # registro al momento della marca temporale (modello v1.1:
+        # alterabile fino alla firma, immutabile dopo).
+        Isc = self.env['crocevia.registro.iscrizione']
+        n_congelati = Isc._congela_bozza_per_vidimazione()
+
         self.stato = 'firmato_verificato'
         self.message_post(body=_(
-            "Vidimazione chiusa. Firmatario: %s, marca temporale: %s, "
-            "TSA: %s."
+            "Vidimazione chiusa. %d record congelati. "
+            "Firmatario: %s, marca temporale: %s, TSA: %s."
         ) % (
+            n_congelati,
             self.firmatario_nome,
             self.marca_temporale_data.strftime('%d/%m/%Y %H:%M:%S')
                 if self.marca_temporale_data else '?',
