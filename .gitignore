@@ -17,6 +17,12 @@ __pycache__/
 .vscode/
 .DS_Store
 
+# Note di sviluppo locali per Claude Code (non vanno in repo: contengono
+# appunti dell'utente, valori in evoluzione, eventuali credenziali di
+# servizio in chiaro durante lo sviluppo).
+CLAUDE.md
+CLAUDE.local.md
+
 # DATI PERSONALI DEI SOCI - GDPR / art. 622 c.p.
 # NON committare MAI il registro soci o suoi derivati. Lo script di
 # trasformazione (`tools/importa_registro_soci.py`) gira sul pc del
