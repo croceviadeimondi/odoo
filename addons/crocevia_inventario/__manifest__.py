@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Inventario",
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.1.0',
     'summary': "Inventario di giochi, manuali e libri delle sedi APS, con prestiti",
     'description': """
 Modulo custom per l'inventario del Crocevia dei Mondi APS.

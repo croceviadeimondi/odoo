@@ -18,6 +18,7 @@
                 <field name="in_prestito" widget="boolean_toggle"
                        readonly="1" optional="show"/>
                 <field name="prestatario_id" optional="show"/>
+                <field name="proprietario_display" string="Proprietario" optional="show"/>
                 <field name="valore_stimato" optional="hide"
                        widget="monetary" sum="Totale stimato"/>
                 <field name="currency_id" column_invisible="1"/>
@@ -72,7 +73,13 @@
                                    invisible="categoria not in ('libro', 'manuale', 'gioco_di_ruolo')"/>
                         </group>
                     </group>
-                    <group string="Valore e note">
+                    <group string="Proprieta'">
+                        <group>
+                            <field name="proprietario_id"
+                                   options="{'no_quick_create': True}"/>
+                            <field name="proprietario_libero"
+                                   invisible="proprietario_id"/>
+                        </group>
                         <group>
                             <field name="valore_stimato"
                                    widget="monetary"/>
@@ -115,6 +122,8 @@
                 <field name="autore"/>
                 <field name="sede_id"/>
                 <field name="categoria"/>
+                <field name="proprietario_id"/>
+                <field name="proprietario_libero"/>
                 <filter string="In prestito" name="filter_in_prestito"
                         domain="[('in_prestito', '=', True)]"/>
                 <filter string="Disponibili" name="filter_disponibili"

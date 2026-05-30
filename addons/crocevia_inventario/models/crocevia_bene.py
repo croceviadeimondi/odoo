@@ -50,6 +50,42 @@ class CroceviaBene(models.Model):
     note = fields.Text(string="Note")
     active = fields.Boolean(default=True)
 
+    proprietario_id = fields.Many2one(
+        'res.partner',
+        string="Proprietario",
+        tracking=True,
+        index=True,
+        help=(
+            "Se il bene appartiene a un socio o all'associazione (come "
+            "partner), collegalo qui. Per proprietari non a sistema usa "
+            "'Proprietario (testo)'."
+        ),
+    )
+    proprietario_libero = fields.Char(
+        string="Proprietario (testo)",
+        tracking=True,
+        help=(
+            "Da usare quando il proprietario non e' un partner gia' a "
+            "sistema (es. soprannomi, ex-soci, 'Gruppone', 'sconosciuto'). "
+            "Ignorato se 'Proprietario' e' valorizzato."
+        ),
+    )
+    proprietario_display = fields.Char(
+        string="Proprietario (visualizzato)",
+        compute='_compute_proprietario_display',
+        store=True,
+    )
+
+    @api.depends('proprietario_id', 'proprietario_libero')
+    def _compute_proprietario_display(self):
+        for bene in self:
+            if bene.proprietario_id:
+                bene.proprietario_display = bene.proprietario_id.display_name
+            elif bene.proprietario_libero:
+                bene.proprietario_display = bene.proprietario_libero
+            else:
+                bene.proprietario_display = False
+
     prestito_ids = fields.One2many(
         'crocevia.prestito', 'bene_id', string="Storico prestiti")
     prestito_corrente_id = fields.Many2one(
