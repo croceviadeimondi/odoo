@@ -4,7 +4,7 @@
 ; `odoo.conf` NON va committato (è in .gitignore).
 
 ; Master password: protegge la gestione dei database (crea / elimina / backup).
-; CAMBIALA con una password lunga e casuale.
+; CAMBIALA con una password lunga e casuale (32+ caratteri random).
 admin_passwd = CAMBIA_QUESTA_PASSWORD_MASTER
 
 ; Percorso dei moduli custom (cartella ./addons montata dal repo).
@@ -16,9 +16,28 @@ addons_path = /mnt/extra-addons
 ; Logging
 log_level = info
 
+; In produzione: log su file persistente (per fail2ban e troubleshooting).
+; Richiede di montare ./logs:/var/log/odoo nel docker-compose (vedi commento).
+; logfile = /var/log/odoo/odoo.log
+
 ; Limiti risorse — adatta in base alla potenza del server.
 limit_time_cpu = 600
 limit_time_real = 1200
 
-; Quando avrai creato il database, scommenta per nascondere gli altri:
-; dbfilter = ^crocevia$
+; ───── Produzione (commentare in dev locale) ─────
+
+; Filtra i database visibili. Il gestionale ha UN SOLO DB ("crocevia"):
+; in prod nasconde la lista e la selezione del database.
+dbfilter = ^crocevia$
+
+; Disabilita la pagina di gestione database (creazione / eliminazione /
+; backup via UI). In prod sempre False: i backup si fanno via pg_dump sul VPS.
+list_db = False
+
+; Quando Odoo gira dietro un reverse proxy (nginx) che termina HTTPS,
+; proxy_mode abilita la fiducia negli header X-Forwarded-*.
+proxy_mode = True
+
+; Numero di worker per produzione. Calcolo: (CPU * 2) + 1; per VPS piccoli
+; lasciare 2-4. In dev locale lasciare 0 (single-process).
+; workers = 2

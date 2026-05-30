@@ -6,6 +6,8 @@ config/odoo.conf
 # dei moduli Odoo, che contengono XML versionati)
 /data/
 *.log
+/logs/*
+!/logs/.gitkeep
 
 # Python / Odoo build artifacts
 __pycache__/

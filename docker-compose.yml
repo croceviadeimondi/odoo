@@ -23,7 +23,10 @@ services:
     depends_on:
       - db
     ports:
-      - "${ODOO_PORT:-8069}:8069"
+      # In dev locale ODOO_BIND default 0.0.0.0 (accessibile dal LAN).
+      # In produzione VPS impostare ODOO_BIND=127.0.0.1 nel .env: la
+      # porta resta raggiungibile solo da nginx sullo stesso host.
+      - "${ODOO_BIND:-0.0.0.0}:${ODOO_PORT:-8069}:8069"
     environment:
       # L'entrypoint dell'immagine Odoo usa queste variabili per la
       # connessione al DB (non vanno ripetute in odoo.conf).
@@ -34,6 +37,9 @@ services:
       - odoo-data:/var/lib/odoo          # filestore (allegati, immagini)
       - ./config:/etc/odoo               # odoo.conf
       - ./addons:/mnt/extra-addons       # moduli custom del Crocevia
+      # Log su file persistente (richiesto da fail2ban in produzione).
+      # In odoo.conf decommentare `logfile = /var/log/odoo/odoo.log`.
+      - ./logs:/var/log/odoo
     restart: unless-stopped
 
 volumes:
