@@ -3,42 +3,58 @@
 Converte i Google Sheets di inventario (Barletta + Trani) in un CSV
 pronto per Import Records di Odoo (modello crocevia.bene).
 
-USO (gira sul TUO PC, non in repo):
+Ogni workbook ha piu' fogli: ne importiamo QUATTRO, ciascuno con uno
+schema di colonne diverso:
+  - GDT           -> categoria gioco_da_tavolo
+  - GDR           -> categoria gioco_di_ruolo
+  - Attrezzature  -> categoria altro
+  - Oggettistica  -> categoria altro
+I fogli "Wishlist GDT", "Wishlist GDR", "Vecchio GDT", "Vecchio GDR"
+sono IGNORATI di proposito.
 
-    # scarica i due fogli condivisi come CSV
-    curl -sL -o /tmp/inv_barletta.csv \\
-        "https://docs.google.com/spreadsheets/d/1tZppwz2MvnN2PDLi2XSsvGolPN-ZAv3MyHADqkiuz7Q/export?format=csv"
-    curl -sL -o /tmp/inv_trani.csv \\
-        "https://docs.google.com/spreadsheets/d/1xF4q8BZvAdc6ESXjZeayulBQDb-J-2cL4gnijRZJumI/export?format=csv"
+USO (gira sul TUO PC, non in repo; richiede openpyxl):
+
+    # scarica i DUE workbook INTERI (tutti i fogli) come xlsx.
+    # NB: format=csv esporterebbe solo il primo foglio -> usare xlsx.
+    curl -sL -o /tmp/wb_barletta.xlsx \\
+        "https://docs.google.com/spreadsheets/d/1tZppwz2MvnN2PDLi2XSsvGolPN-ZAv3MyHADqkiuz7Q/export?format=xlsx"
+    curl -sL -o /tmp/wb_trani.xlsx \\
+        "https://docs.google.com/spreadsheets/d/1xF4q8BZvAdc6ESXjZeayulBQDb-J-2cL4gnijRZJumI/export?format=xlsx"
 
     # converti
     python3 tools/importa_inventari.py \\
-        --barletta /tmp/inv_barletta.csv \\
-        --trani    /tmp/inv_trani.csv \\
+        --barletta /tmp/wb_barletta.xlsx \\
+        --trani    /tmp/wb_trani.xlsx \\
         --output   /tmp/inventario_per_odoo.csv
 
 Poi: Odoo > Inventario > Beni > tre puntini > Importa records >
 carica /tmp/inventario_per_odoo.csv.
 
 DOPO L'IMPORT:
-    rm /tmp/inv_barletta.csv /tmp/inv_trani.csv /tmp/inventario_per_odoo.csv
+    rm /tmp/wb_barletta.xlsx /tmp/wb_trani.xlsx /tmp/inventario_per_odoo.csv
 
 Note tecniche:
-    - Le righe con DIVISORIO=TRUE (separatori visivi nel foglio) e quelle
-      senza titolo sono scartate automaticamente.
-    - Il campo PROPRIETARIƏ viene mappato a `proprietario_id/.id`
-      (partner_id Odoo numerico) per i direttivi conosciuti, altrimenti
-      finisce nel campo testo `proprietario_libero`.
-    - I partner_id dei direttivi sono cablati nello script: aggiorna
-      `PARTNER_BY_NAME` se cambiano.
+    - External id deterministici `__import__.bene_<sede>_<NNNN>`, contati
+      per sede nell'ordine GDT, GDR, Attrezzature, Oggettistica. I beni
+      GDT gia' importati (Barletta 0001..0158, Trani 0001..0046) vengono
+      cosi' AGGIORNATI, non duplicati, e gli altri fogli accodati dopo.
+    - Le righe senza titolo e i divisori (DIVISORIO=TRUE, solo GDT) sono
+      scartate automaticamente.
+    - Il campo proprietario viene mappato a `proprietario_id/.id` per i
+      direttivi noti (PARTNER_BY_NAME), altrimenti finisce nel testo
+      libero `proprietario_libero`. Aggiorna PARTNER_BY_NAME se cambiano.
 """
 import argparse
-import csv
 import re
 import sys
 
+try:
+    import openpyxl
+except ImportError:
+    sys.exit("ERRORE: serve openpyxl. Installa con: pip install openpyxl")
 
-# Mappa testo PROPRIETARIƏ (lowercased, trimmed, ? finale rimosso) →
+
+# Mappa testo proprietario (lowercased, trimmed, ? finale rimosso) ->
 # partner_id Odoo numerico. Per i casi non in mappa il valore va in
 # `proprietario_libero` come testo libero.
 PARTNER_BY_NAME = {
@@ -65,15 +81,18 @@ PROP_LIBERO_NORMALIZE = {
 
 
 def normalizza_testo(s):
-    """Trim + collassa whitespace + rimuove tab/newline interni."""
-    if not s:
+    """Trim + collassa whitespace + rimuove tab/newline interni.
+    Coerce a stringa (le celle xlsx possono essere numeri/bool)."""
+    if s is None:
         return ''
+    s = str(s)
     s = s.replace('\n', ' ').replace('\t', ' ').replace('\r', ' ')
     return re.sub(r'\s+', ' ', s).strip()
 
 
 def parse_anno(s):
     """Estrae il primo anno a 4 cifre dalla cella EDIZIONE."""
+    s = normalizza_testo(s)
     if not s:
         return ''
     m = re.search(r'\b(19|20)\d{2}\b', s)
@@ -88,17 +107,22 @@ def parse_placeholder(s):
     return s
 
 
-parse_autore = parse_placeholder
-parse_editore = parse_placeholder
+def cella_true(v):
+    """True per checkbox xlsx (bool) o stringa 'TRUE'."""
+    if isinstance(v, bool):
+        return v
+    return normalizza_testo(v).upper() == 'TRUE'
 
 
-def riga_da_scartare(row):
-    """True se la riga e' un divisorio o non ha titolo."""
-    if (row.get('DIVISORIO') or '').strip().upper() == 'TRUE':
-        return True, 'divisorio'
-    if not normalizza_testo(row.get('GIOCO', '')):
-        return True, 'vuoto'
-    return False, None
+def parse_int(v):
+    """Ritorna int o None (le celle numeriche xlsx sono float)."""
+    s = normalizza_testo(v)
+    if not s:
+        return None
+    try:
+        return int(float(s))
+    except (TypeError, ValueError):
+        return None
 
 
 def converti_proprietario(prop_raw):
@@ -114,56 +138,188 @@ def converti_proprietario(prop_raw):
     return (None, s)
 
 
-def converti_riga(row, sede_xid, idx):
+def _nota_copie(row, col, label="Copie disponibili"):
+    n = parse_int(row.get(col, ''))
+    return f"{label}: {n}" if n and n > 1 else None
+
+
+# ---------------------------------------------------------------------
+# Builder per foglio. Ognuno riceve la riga (dict header->valore) e
+# ritorna il dict dei campi bene, oppure None se la riga va scartata.
+# ---------------------------------------------------------------------
+
+def build_gdt(row):
     titolo = normalizza_testo(row.get('GIOCO', ''))
-    autore = parse_autore(row.get('AUTORƏ + ILLUSTRATORƏ', ''))
-    editore = parse_editore(row.get('EDITORE', ''))
+    if not titolo or cella_true(row.get('DIVISORIO', '')):
+        return None
     anno = parse_anno(row.get('EDIZIONE', ''))
-    partner_id, libero = converti_proprietario(row.get('PROPRIETARIƏ', ''))
-
-    note_parts = []
-    note_csv = normalizza_testo(row.get('NOTE', ''))
-    if note_csv:
-        note_parts.append(note_csv)
-    edizione_raw = normalizza_testo(row.get('EDIZIONE', ''))
-    if edizione_raw and not anno:
-        note_parts.append(f"Edizione: {edizione_raw}")
-    n_copie = normalizza_testo(row.get('N. COPIE', ''))
-    try:
-        if n_copie and int(n_copie) > 1:
-            note_parts.append(f"Copie disponibili: {n_copie}")
-    except ValueError:
-        pass
-    if (row.get('INVENTARIATO') or '').strip().upper() == 'TRUE':
-        note_parts.append("Inventariato fisicamente: SI")
-
-    sede_slug = sede_xid.split('.')[1]
+    note = []
+    n = parse_placeholder(row.get('NOTE', ''))
+    if n:
+        note.append(n)
+    ediz = normalizza_testo(row.get('EDIZIONE', ''))
+    if ediz and not anno:
+        note.append(f"Edizione: {ediz}")
+    c = _nota_copie(row, 'N. COPIE')
+    if c:
+        note.append(c)
+    if cella_true(row.get('INVENTARIATO', '')):
+        note.append("Inventariato fisicamente: SI")
+    pid, libero = converti_proprietario(row.get('PROPRIETARIƏ', ''))
     return {
-        'id': f"__import__.bene_{sede_slug}_{idx:04d}",
         'name': titolo,
         'categoria': 'gioco_da_tavolo',
-        'sede_id/id': sede_xid,
-        'autore': autore,
-        'editore': editore,
+        'autore': parse_placeholder(row.get('AUTORƏ + ILLUSTRATORƏ', '')),
+        'editore': parse_placeholder(row.get('EDITORE', '')),
         'anno_pubblicazione': anno,
-        'proprietario_id/.id': str(partner_id) if partner_id else '',
+        'proprietario_id/.id': str(pid) if pid else '',
         'proprietario_libero': libero,
-        'note': ' | '.join(note_parts),
+        'note': ' | '.join(note),
     }
 
 
-def converti_file(csv_path, sede_xid, out_rows, skipped):
-    with open(csv_path, encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        idx = 0
-        for row in reader:
-            scartare, motivo = riga_da_scartare(row)
-            if scartare:
-                skipped[motivo] = skipped.get(motivo, 0) + 1
+def build_gdr(row):
+    titolo = normalizza_testo(row.get('GIOCO', ''))
+    if not titolo:
+        return None
+    anno = parse_anno(row.get('EDIZIONE', ''))
+    note = []
+    sistema = normalizza_testo(row.get('SISTEMA', ''))
+    if sistema:
+        note.append(f"Sistema: {sistema}")
+    n = parse_placeholder(row.get('NOTE', ''))
+    if n:
+        note.append(n)
+    ediz = normalizza_testo(row.get('EDIZIONE', ''))
+    if ediz and not anno:
+        note.append(f"Edizione: {ediz}")
+    c = _nota_copie(row, 'N. COPIE')
+    if c:
+        note.append(c)
+    if cella_true(row.get('INVENTARIATO', '')):
+        note.append("Inventariato fisicamente: SI")
+    pid, libero = converti_proprietario(row.get('PROPRIETARIO', ''))
+    return {
+        'name': titolo,
+        'categoria': 'gioco_di_ruolo',
+        'autore': parse_placeholder(row.get('AUTORƏ', '')),
+        'editore': parse_placeholder(row.get('EDITORE', '')),
+        'anno_pubblicazione': anno,
+        'proprietario_id/.id': str(pid) if pid else '',
+        'proprietario_libero': libero,
+        'note': ' | '.join(note),
+    }
+
+
+def build_attrezzature(row):
+    titolo = normalizza_testo(row.get('OGGETTO', ''))
+    if not titolo:
+        return None
+    note = []
+    luogo = normalizza_testo(row.get('LUOGO', ''))
+    if luogo:
+        note.append(f"Luogo: {luogo}")
+    # FUNGE? = funziona? Annotiamo solo quando NON funziona.
+    funge_raw = normalizza_testo(row.get('FUNGE?', ''))
+    if funge_raw and not cella_true(row.get('FUNGE?', '')):
+        note.append("Stato: non funzionante")
+    c = _nota_copie(row, 'QUANTITÀ', label="Quantita'")
+    if c:
+        note.append(c)
+    n = parse_placeholder(row.get('NOTE', ''))
+    if n:
+        note.append(n)
+    pid, libero = converti_proprietario(row.get('PROPRIETARIO', ''))
+    return {
+        'name': titolo,
+        'categoria': 'altro',
+        'autore': '',
+        'editore': '',
+        'anno_pubblicazione': '',
+        'proprietario_id/.id': str(pid) if pid else '',
+        'proprietario_libero': libero,
+        'note': ' | '.join(note),
+    }
+
+
+def build_oggettistica(row):
+    titolo = normalizza_testo(row.get('OGGETTO', ''))
+    if not titolo:
+        return None
+    note = []
+    luogo = normalizza_testo(row.get('LUOGO', ''))
+    if luogo:
+        note.append(f"Luogo: {luogo}")
+    c = _nota_copie(row, 'N. COPIE')
+    if c:
+        note.append(c)
+    n = parse_placeholder(row.get('NOTE', ''))
+    if n:
+        note.append(n)
+    pid, libero = converti_proprietario(row.get('PROPRIETARIƏ', ''))
+    return {
+        'name': titolo,
+        'categoria': 'altro',
+        'autore': '',
+        'editore': '',
+        'anno_pubblicazione': '',
+        'proprietario_id/.id': str(pid) if pid else '',
+        'proprietario_libero': libero,
+        'note': ' | '.join(note),
+    }
+
+
+# Ordine FISSO: GDT prima (ids stabili con l'import precedente), poi gli
+# altri. (nome_foglio, builder).
+FOGLI = [
+    ('GDT', build_gdt),
+    ('GDR', build_gdr),
+    ('Attrezzature', build_attrezzature),
+    ('Oggettistica', build_oggettistica),
+]
+
+
+def iter_righe(ws):
+    """Yield dict {header: valore} per ogni riga dati del foglio."""
+    header = None
+    for row in ws.iter_rows(values_only=True):
+        if header is None:
+            header = [normalizza_testo(c) for c in row]
+            continue
+        d = {}
+        for i, h in enumerate(header):
+            if h:
+                d[h] = row[i] if i < len(row) else ''
+        yield d
+
+
+def converti_workbook(path, sede_xid, out_rows, stats):
+    """Itera i fogli noti del workbook, accoda le righe convertite.
+    Numerazione per sede continua tra i fogli (GDT mantiene gli id
+    dell'import precedente)."""
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    sede_slug = sede_xid.split('.')[1]
+    idx = 0
+    tot = 0
+    for nome_foglio, builder in FOGLI:
+        if nome_foglio not in wb.sheetnames:
+            stats['fogli_mancanti'].append(f"{sede_slug}:{nome_foglio}")
+            continue
+        ws = wb[nome_foglio]
+        n_foglio = 0
+        for row in iter_righe(ws):
+            vals = builder(row)
+            if vals is None:
                 continue
             idx += 1
-            out_rows.append(converti_riga(row, sede_xid, idx))
-    return idx
+            n_foglio += 1
+            vals['id'] = f"__import__.bene_{sede_slug}_{idx:04d}"
+            vals['sede_id/id'] = sede_xid
+            out_rows.append(vals)
+        stats['per_foglio'].append((sede_slug, nome_foglio, n_foglio))
+        tot += n_foglio
+    wb.close()
+    return tot
 
 
 def main():
@@ -171,15 +327,18 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument('--barletta', required=True, help='CSV scaricato dal foglio Barletta')
-    p.add_argument('--trani', required=True, help='CSV scaricato dal foglio Trani')
+    p.add_argument('--barletta', required=True, help='xlsx workbook Barletta')
+    p.add_argument('--trani', required=True, help='xlsx workbook Trani')
     p.add_argument('--output', required=True, help='CSV unico per Odoo')
     args = p.parse_args()
 
+    import csv
     out_rows = []
-    skipped = {}
-    n_btl = converti_file(args.barletta, 'crocevia_inventario.sede_barletta', out_rows, skipped)
-    n_tra = converti_file(args.trani, 'crocevia_inventario.sede_trani', out_rows, skipped)
+    stats = {'per_foglio': [], 'fogli_mancanti': []}
+    n_btl = converti_workbook(
+        args.barletta, 'crocevia_inventario.sede_barletta', out_rows, stats)
+    n_tra = converti_workbook(
+        args.trani, 'crocevia_inventario.sede_trani', out_rows, stats)
 
     fieldnames = [
         'id', 'name', 'categoria', 'sede_id/id',
@@ -192,14 +351,17 @@ def main():
         writer.writerows(out_rows)
 
     print(f"OK: scritte {len(out_rows)} righe in {args.output}")
-    print(f"    Barletta: {n_btl} beni")
-    print(f"    Trani:    {n_tra} beni")
-    print(f"    Saltate:  {skipped.get('divisorio', 0)} divisorio + {skipped.get('vuoto', 0)} righe vuote")
+    print(f"    Barletta: {n_btl} beni  |  Trani: {n_tra} beni")
+    print("    Dettaglio per foglio:")
+    for sede, foglio, n in stats['per_foglio']:
+        print(f"      {sede:18s} {foglio:14s} {n:4d}")
+    if stats['fogli_mancanti']:
+        print(f"    Fogli attesi non trovati: {', '.join(stats['fogli_mancanti'])}")
     print()
     print("Prossimo passo:")
     print("  Odoo > Inventario > Beni > tre puntini > Importa records")
     print(f"  Carica: {args.output}")
-    print("  Dopo l'import: rm i CSV temporanei.")
+    print("  Dopo l'import: rm i file temporanei.")
     return 0
 
 
