@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_registro_vidimazione_list" model="ir.ui.view">
+        <field name="name">crocevia.registro.vidimazione.list</field>
+        <field name="model">crocevia.registro.vidimazione</field>
+        <field name="arch" type="xml">
+            <list decoration-success="stato == 'firmato_verificato'"
+                  decoration-warning="stato == 'pdf_generato'"
+                  decoration-muted="stato == 'bozza'"
+                  decoration-danger="stato == 'errore'">
+                <field name="name"/>
+                <field name="data_snapshot"/>
+                <field name="iscrizioni_count"/>
+                <field name="firmatario_nome"/>
+                <field name="marca_temporale_data"/>
+                <field name="stato" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_registro_vidimazione_form" model="ir.ui.view">
+        <field name="name">crocevia.registro.vidimazione.form</field>
+        <field name="model">crocevia.registro.vidimazione</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_genera_snapshot" type="object"
+                            string="Genera snapshot PDF"
+                            class="oe_highlight"
+                            invisible="stato != 'bozza'"/>
+                    <button name="action_verifica_firma" type="object"
+                            string="Chiudi vidimazione"
+                            class="oe_highlight"
+                            invisible="stato != 'pdf_generato'"/>
+                    <field name="stato" widget="statusbar"
+                           statusbar_visible="bozza,pdf_generato,firmato_verificato"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <div class="alert alert-info" role="alert"
+                         invisible="stato != 'bozza'">
+                        Clicca <strong>Genera snapshot PDF</strong> per
+                        creare il file da firmare esternamente.
+                    </div>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="stato != 'pdf_generato'">
+                        <strong>Workflow firma:</strong>
+                        <ol>
+                            <li>Scarica il <em>PDF non firmato</em> qui sotto.</li>
+                            <li>Firmalo esternamente con FEQ (ArubaSign /
+                                GoSign / Dike / Namirial Firma Pro).</li>
+                            <li>Applica una marca temporale RFC 3161 (PAdES-T).</li>
+                            <li>Carica il file firmato in <em>PDF firmato + marcato</em>.</li>
+                            <li>Compila i campi di verifica (firmatario,
+                                marca temporale, TSA, flag firma valida).</li>
+                            <li>Clicca <strong>Chiudi vidimazione</strong>.</li>
+                        </ol>
+                    </div>
+                    <group>
+                        <group string="Snapshot">
+                            <field name="data_snapshot" readonly="1"/>
+                            <field name="iscrizioni_count" readonly="1"/>
+                            <field name="pdf_unsigned" filename="pdf_unsigned_filename"
+                                   readonly="stato != 'pdf_generato'"/>
+                            <field name="pdf_unsigned_filename" invisible="1"/>
+                            <field name="pdf_unsigned_hash" readonly="1"
+                                   invisible="not pdf_unsigned_hash"/>
+                            <field name="responsabile_id" readonly="1"/>
+                        </group>
+                        <group string="Firma esterna"
+                               invisible="stato == 'bozza'">
+                            <field name="pdf_signed" filename="pdf_signed_filename"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="pdf_signed_filename" invisible="1"/>
+                            <field name="firma_valida"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="firmatario_nome"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="firmatario_cf"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="marca_temporale_data"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="tsa_provider"
+                                   readonly="stato == 'firmato_verificato'"
+                                   placeholder="Es. Aruba TSA, Namirial TSA"/>
+                        </group>
+                    </group>
+                    <group string="Dettagli verifica">
+                        <field name="firma_dettagli" nolabel="1"
+                               readonly="stato == 'firmato_verificato'"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_registro_vidimazione" model="ir.actions.act_window">
+        <field name="name">Vidimazioni</field>
+        <field name="res_model">crocevia.registro.vidimazione</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

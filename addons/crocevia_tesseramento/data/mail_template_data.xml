@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ============================================================
+             Ricevuta non fiscale: inviata MANUALMENTE dal bottone
+             "Invia via email" sulla scheda ricevuta. Allega il PDF QWeb.
+             ============================================================ -->
+        <record id="mail_template_ricevuta" model="mail.template">
+            <field name="name">Ricevuta non fiscale - invio al socio</field>
+            <field name="model_id" ref="crocevia_tesseramento.model_crocevia_ricevuta"/>
+            <field name="email_from">info@croceviadeimondi.org</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="lang">{{ object.partner_id.lang or 'it_IT' }}</field>
+            <field name="subject">Ricevuta {{ object.numero }} - Crocevia dei Mondi APS</field>
+            <field name="report_template_ids" eval="[(4, ref('crocevia_tesseramento.action_report_crocevia_ricevuta'))]"/>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">
+                    <p>Ciao <t t-out="object.partner_id.name or ''">Socio</t>,</p>
+                    <p>
+                        in allegato trovi la ricevuta non fiscale
+                        <strong t-out="object.numero or ''">RIC/0000</strong>
+                        del <t t-out="format_date(object.data) or ''">01/01/2026</t>,
+                        relativa a un importo di
+                        <strong t-out="format_amount(object.importo, object.currency_id) or ''">0,00</strong>.
+                    </p>
+                    <p>
+                        Grazie per il tuo contributo: sostiene le attivita'
+                        dell'associazione.
+                    </p>
+                    <p style="margin-top:24px;">
+                        Un saluto,<br/>
+                        <strong>Crocevia dei Mondi APS</strong><br/>
+                        <a href="https://croceviadeimondi.org" style="color:#714B67;">croceviadeimondi.org</a>
+                    </p>
+                </div>
+            </field>
+        </record>
+
+        <!-- ============================================================
+             Conferma iscrizione: inviata AUTOMATICAMENTE all'approvazione
+             della richiesta (vedi crocevia.richiesta.iscrizione.action_approva).
+             Model res.partner: l'oggetto e' il socio appena creato.
+             ============================================================ -->
+        <record id="mail_template_conferma_iscrizione" model="mail.template">
+            <field name="name">Conferma iscrizione - benvenuto socio</field>
+            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="email_from">info@croceviadeimondi.org</field>
+            <field name="partner_to">{{ object.id }}</field>
+            <field name="lang">{{ object.lang or 'it_IT' }}</field>
+            <field name="subject">Benvenuto in Crocevia dei Mondi APS</field>
+            <field name="auto_delete" eval="False"/>
+            <field name="body_html" type="html">
+                <div style="margin:0;padding:0;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:#333;">
+                    <p>Ciao <t t-out="object.name or ''">Socio</t>,</p>
+                    <p>
+                        la tua iscrizione a <strong>Crocevia dei Mondi APS</strong>
+                        e' stata approvata. Benvenuto!
+                    </p>
+                    <p t-if="object.numero_socio">
+                        Il tuo numero socio e'
+                        <strong t-out="object.numero_socio">0</strong>.
+                    </p>
+                    <p>
+                        Useremo il gioco come strumento sociale: ti terremo
+                        aggiornato sulle attivita' e sugli appuntamenti nelle
+                        nostre sedi di Barletta e Trani.
+                    </p>
+                    <p style="margin-top:24px;">
+                        A presto,<br/>
+                        <strong>Crocevia dei Mondi APS</strong><br/>
+                        <a href="https://croceviadeimondi.org" style="color:#714B67;">croceviadeimondi.org</a>
+                    </p>
+                </div>
+            </field>
+        </record>
+
+    </data>
+</odoo>

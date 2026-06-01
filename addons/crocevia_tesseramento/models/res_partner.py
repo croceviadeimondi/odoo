@@ -1,4 +1,4 @@
-from odoo import api, fields, models, _
+from odoo import api, fields, models
 
 
 CATEGORIA_SOCIO_SELECTION = [
@@ -6,6 +6,14 @@ CATEGORIA_SOCIO_SELECTION = [
     ('volontario', 'Volontario'),
     ('onorario', 'Onorario'),
     ('direttivo', 'Direttivo'),
+]
+
+STATO_CIVILE_SELECTION = [
+    ('celibe', 'Celibe/Nubile'),
+    ('coniugato', 'Coniugato/a'),
+    ('divorziato', 'Divorziato/a'),
+    ('vedovo', 'Vedovo/a'),
+    ('altro', 'Altro / non dichiarato'),
 ]
 
 
@@ -41,8 +49,35 @@ class ResPartner(models.Model):
     )
     data_iscrizione = fields.Date(string="Data iscrizione")
     data_cessazione = fields.Date(string="Data cessazione")
+
+    # Anagrafica privata del socio (per libro soci + ricevute + RUNTS).
+    # Sono campi del Crocevia, non standard in res.partner.
+    data_nascita = fields.Date(string="Data di nascita")
+    luogo_nascita = fields.Char(string="Luogo di nascita")
+    codice_fiscale = fields.Char(
+        string="Codice fiscale",
+        size=16,
+        index=True,
+        help="Codice fiscale di persona fisica (16 caratteri). "
+             "Viene normalizzato in maiuscolo via constraint.",
+    )
+    stato_civile = fields.Selection(
+        selection=STATO_CIVILE_SELECTION,
+        string="Stato civile",
+    )
+
+    @api.constrains('codice_fiscale')
+    def _check_codice_fiscale(self):
+        for p in self:
+            if p.codice_fiscale:
+                # Normalizza in maiuscolo (idempotente)
+                cf = p.codice_fiscale.strip().upper()
+                if cf != p.codice_fiscale:
+                    p.codice_fiscale = cf
     carica_ids = fields.One2many(
         'crocevia.carica', 'partner_id', string="Cariche direttive")
+    ricevuta_ids = fields.One2many(
+        'crocevia.ricevuta', 'partner_id', string="Ricevute")
     carica_attuale = fields.Char(
         string="Carica in corso",
         compute='_compute_carica_attuale',
@@ -58,13 +93,6 @@ class ResPartner(models.Model):
                 ruolo_dict.get(c.ruolo, c.ruolo) for c in cariche
             ) or False
 
-    @api.onchange('categoria_socio')
-    def _onchange_categoria_socio(self):
-        # I soci onorari sono esenti dalla quota: marchiamoli come "membri
-        # gratuiti" (campo nativo del modulo membership).
-        if self.categoria_socio == 'onorario':
-            self.free_member = True
-
     def action_attiva_socio(self):
         Sequence = self.env['ir.sequence']
         for partner in self:
@@ -79,8 +107,6 @@ class ResPartner(models.Model):
             if not partner.numero_socio:
                 vals['numero_socio'] = Sequence.next_by_code(
                     'crocevia.numero.socio')
-            if partner.categoria_socio == 'onorario':
-                vals['free_member'] = True
             partner.write(vals)
 
     def action_cessa_socio(self):
@@ -90,3 +116,42 @@ class ResPartner(models.Model):
                 'data_cessazione': partner.data_cessazione
                     or fields.Date.context_today(partner),
             })
+
+    # ----------------- ricevute: bottoni quick-action -----------------
+
+    def action_registra_obolo(self):
+        """Apre wizard obolo (importo modificabile, default 2 EUR)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registra obolo',
+            'res_model': 'crocevia.ricevuta.obolo.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_registra_mensilita(self):
+        """Apre wizard mensilita' (mese e importo modificabili)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Registra contributo mensile',
+            'res_model': 'crocevia.ricevuta.mensilita.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }
+
+    def action_mostra_qr_bonifico(self):
+        """Apre wizard col QR EPC per fare un bonifico SEPA precompilato
+        al conto del crocevia (importo e causale modificabili al volo)."""
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'QR bonifico - %s' % self.name,
+            'res_model': 'crocevia.qr.bonifico.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
+        }

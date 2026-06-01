@@ -1,0 +1,38 @@
+# Traduzioni italiane del modulo crocevia_navigazione.
+# Pattern gia' visto in crocevia_tesseramento / crocevia_inventario:
+# i nomi dei nuovi menu root sono scritti in italiano nella lingua
+# sorgente (en_US), ma in Odoo 18 senza chiave it_IT esplicita nel
+# jsonb il menu compare vuoto. Questo .po popola la chiave it_IT.
+msgid ""
+msgstr ""
+"Project-Id-Version: crocevia_navigazione 18.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: crocevia_navigazione
+#: model:ir.ui.menu,name:crocevia_navigazione.menu_soci_root
+msgid "Soci"
+msgstr "Soci"
+
+#. module: crocevia_navigazione
+#: model:ir.ui.menu,name:crocevia_navigazione.menu_cassa_root
+msgid "Cassa"
+msgstr "Cassa"
+
+#. module: crocevia_navigazione
+#: model:ir.ui.menu,name:crocevia_navigazione.menu_atti_root
+msgid "Assemblee"
+msgstr "Assemblee"
+
+#. module: crocevia_navigazione
+#: model:ir.ui.menu,name:crocevia_navigazione.menu_volontariato_root
+msgid "Volontariato"
+msgstr "Volontariato"
+
+#. module: crocevia_navigazione
+#: model:ir.ui.menu,name:contacts.menu_contacts
+msgid "Tutti i contatti"
+msgstr "Tutti i contatti"

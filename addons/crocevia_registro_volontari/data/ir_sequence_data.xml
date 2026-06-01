@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Sequenza progressiva del registro volontari.
+             Padding 6 -> numeri da 000001 in poi.
+             Mai riusata: anche annullando un'iscrizione, il numero
+             resta occupato (e' un requisito di art. 2215-bis cc). -->
+        <record id="seq_crocevia_registro_volontario" model="ir.sequence">
+            <field name="name">Registro volontari Crocevia</field>
+            <field name="code">crocevia.registro.volontario</field>
+            <field name="prefix"></field>
+            <field name="suffix"></field>
+            <field name="padding">6</field>
+            <field name="number_increment">1</field>
+            <field name="number_next_actual">1</field>
+            <field name="implementation">standard</field>
+        </record>
+    </data>
+</odoo>

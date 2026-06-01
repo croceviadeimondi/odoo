@@ -31,11 +31,18 @@
                             <field name="data"/>
                             <field name="tipo"/>
                         </group>
-                        <group>
+                        <group invisible="tipo == 'resoconto_informale'">
                             <field name="documento"
                                    filename="documento_filename"/>
                             <field name="documento_filename" invisible="1"/>
                         </group>
+                    </group>
+                    <!-- Resoconti informali: corpo testuale direttamente
+                         in scheda, niente pdf da firmare. -->
+                    <group string="Contenuto del resoconto"
+                           invisible="tipo != 'resoconto_informale'">
+                        <field name="contenuto" nolabel="1"
+                               placeholder="Cronaca dell'incontro: chi c'era, cosa si e' discusso, decisioni provvisorie..."/>
                     </group>
                     <group string="Note / sintesi">
                         <field name="note" nolabel="1"/>
@@ -56,6 +63,11 @@
                         domain="[('tipo', '=', 'assemblea_soci')]"/>
                 <filter string="Riunioni direttivo" name="filter_direttivo"
                         domain="[('tipo', '=', 'riunione_direttivo')]"/>
+                <filter string="Resoconti informali" name="filter_resoconto"
+                        domain="[('tipo', '=', 'resoconto_informale')]"/>
+                <separator/>
+                <filter string="Solo verbali ufficiali" name="filter_verbali_ufficiali"
+                        domain="[('tipo', 'in', ['assemblea_soci', 'riunione_direttivo'])]"/>
                 <group expand="0" string="Raggruppa per">
                     <filter string="Tipo" name="group_tipo"
                             context="{'group_by': 'tipo'}"/>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- I sotto-menu agganciati al root "Volontariato" creato da
+         crocevia_navigazione (rimasto vuoto dopo aver disinstallato hr). -->
+
+    <menuitem id="menu_crocevia_libro_volontari"
+              name="Libro volontari"
+              parent="crocevia_navigazione.menu_volontariato_root"
+              action="action_libro_volontari"
+              sequence="10"/>
+
+    <menuitem id="menu_crocevia_ore_volontariato"
+              name="Ore prestate"
+              parent="crocevia_navigazione.menu_volontariato_root"
+              action="action_crocevia_attivita_volontariato"
+              sequence="20"/>
+
+</odoo>

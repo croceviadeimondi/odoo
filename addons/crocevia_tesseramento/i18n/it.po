@@ -1,0 +1,50 @@
+# Traduzioni italiane del modulo crocevia_tesseramento.
+#
+# I termini del modulo sono gia' scritti in italiano nella lingua sorgente
+# (en_US, default di Odoo). Questo file aggiunge la chiave `it_IT` ai campi
+# tradotti jsonb cosi' i record vengono mostrati correttamente quando la
+# UI e' in italiano (altrimenti Odoo 18 in alcuni contesti mostra stringa
+# vuota anziche' il fallback en_US, come succede per i menu root).
+msgid ""
+msgstr ""
+"Project-Id-Version: crocevia_tesseramento 18.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_root
+msgid "Tesseramento"
+msgstr "Tesseramento"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_soci
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_soci
+msgid "Soci"
+msgstr "Soci"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_richieste
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_richiesta
+msgid "Richieste iscrizione"
+msgstr "Richieste iscrizione"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_cariche
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_carica
+msgid "Cariche direttive"
+msgstr "Cariche direttive"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_verbali
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_verbale
+msgid "Verbali"
+msgstr "Verbali"
+
+#. module: crocevia_tesseramento
+#: model:ir.ui.menu,name:crocevia_tesseramento.menu_crocevia_ricevute
+#: model:ir.actions.act_window,name:crocevia_tesseramento.action_crocevia_ricevuta
+msgid "Ricevute"
+msgstr "Ricevute"

@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="report_volontari_doc">
+        <t t-call="web.external_layout">
+            <div class="page">
+                <h1>Registro dei Volontari</h1>
+                <h3>Crocevia dei Mondi APS</h3>
+                <p>
+                    <strong>Codice fiscale APS:</strong>
+                    <span t-out="cf_aps"/>
+                </p>
+                <p>
+                    <strong>Data snapshot:</strong>
+                    <span t-out="data_snapshot" t-options='{"widget": "datetime"}'/>
+                </p>
+                <p>
+                    <em>Tenuto ai sensi del DM 6 ottobre 2021 e dell'art.
+                    2215-bis del Codice Civile. Inalterabilita' garantita
+                    da hash chain SHA-256 sui record. Vidimazione
+                    annuale tramite firma digitale qualificata + marca
+                    temporale RFC 3161 PAdES-T applicate al presente PDF.</em>
+                </p>
+
+                <h2 style="margin-top: 24px;">1. Volontari abituali (art. 17 c.1 CTS)</h2>
+                <table class="table table-sm table-bordered"
+                       t-if="iscrizioni_abituali">
+                    <thead>
+                        <tr>
+                            <th>N.</th>
+                            <th>Cognome e nome</th>
+                            <th>CF</th>
+                            <th>Nascita</th>
+                            <th>Residenza</th>
+                            <th>Dal</th>
+                            <th>Al</th>
+                            <th>Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="iscrizioni_abituali" t-as="r">
+                            <td><span t-out="'%06d' % r.numero_iscrizione"/></td>
+                            <td><span t-out="r.cognome"/> <span t-out="r.nome"/></td>
+                            <td><span t-out="r.codice_fiscale"/></td>
+                            <td><span t-out="r.data_nascita" t-options='{"widget": "date"}'/></td>
+                            <td>
+                                <span t-out="r.citta_residenza"/>
+                                (<span t-out="r.provincia_residenza"/>)
+                            </td>
+                            <td><span t-out="r.data_inizio_attivita" t-options='{"widget": "date"}'/></td>
+                            <td>
+                                <span t-if="r.data_fine_attivita"
+                                      t-out="r.data_fine_attivita"
+                                      t-options='{"widget": "date"}'/>
+                            </td>
+                            <td><span t-out="dict(r._fields['stato'].selection).get(r.stato)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="not iscrizioni_abituali">
+                    <em>Nessun volontario abituale iscritto.</em>
+                </p>
+
+                <h2 style="margin-top: 24px;">2. Volontari occasionali (art. 17 c.2 CTS)</h2>
+                <table class="table table-sm table-bordered"
+                       t-if="iscrizioni_occasionali">
+                    <thead>
+                        <tr>
+                            <th>N.</th>
+                            <th>Cognome e nome</th>
+                            <th>CF</th>
+                            <th>Dal</th>
+                            <th>Al</th>
+                            <th>Stato</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="iscrizioni_occasionali" t-as="r">
+                            <td><span t-out="'%06d' % r.numero_iscrizione"/></td>
+                            <td><span t-out="r.cognome"/> <span t-out="r.nome"/></td>
+                            <td><span t-out="r.codice_fiscale"/></td>
+                            <td><span t-out="r.data_inizio_attivita" t-options='{"widget": "date"}'/></td>
+                            <td>
+                                <span t-if="r.data_fine_attivita"
+                                      t-out="r.data_fine_attivita"
+                                      t-options='{"widget": "date"}'/>
+                            </td>
+                            <td><span t-out="dict(r._fields['stato'].selection).get(r.stato)"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="not iscrizioni_occasionali">
+                    <em>Nessun volontario occasionale iscritto.</em>
+                </p>
+
+                <h2 style="margin-top: 24px;">3. Annullamenti</h2>
+                <table class="table table-sm table-bordered" t-if="annullamenti">
+                    <thead>
+                        <tr>
+                            <th>N. iscrizione</th>
+                            <th>Data annullamento</th>
+                            <th>Motivazione</th>
+                            <th>Responsabile</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="annullamenti" t-as="a">
+                            <td>
+                                <span t-if="a.iscrizione_id"
+                                      t-out="'%06d' % a.iscrizione_id.numero_iscrizione"/>
+                            </td>
+                            <td><span t-out="a.data_annullamento" t-options='{"widget": "datetime"}'/></td>
+                            <td><span t-out="a.motivazione"/></td>
+                            <td><span t-out="a.responsabile_id.name"/></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <p t-if="not annullamenti">
+                    <em>Nessun annullamento registrato.</em>
+                </p>
+
+                <h2 style="margin-top: 24px;">4. Catena di integrita'</h2>
+                <p>
+                    Hash di ciascun record (primi 16 caratteri SHA-256),
+                    ricalcolabile via menu Iscrizioni - Azioni - Verifica
+                    catena di integrita'.
+                </p>
+                <table class="table table-sm" style="font-family: monospace; font-size: 11px;">
+                    <thead>
+                        <tr><th>N.</th><th>Hash</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="iscrizioni_abituali + iscrizioni_occasionali" t-as="r">
+                            <td><span t-out="'%06d' % r.numero_iscrizione"/></td>
+                            <td><span t-out="(r.hash_record or '')[:16]"/>...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div style="margin-top: 48px; page-break-inside: avoid;">
+                    <p>
+                        Il presente registro consta di <strong><span t-out="(iscrizioni_abituali|length) + (iscrizioni_occasionali|length)"/></strong>
+                        iscrizioni progressive, di cui <strong><span t-out="totali['iscritti']"/></strong> attive,
+                        <strong><span t-out="totali['cessati']"/></strong> cessate e
+                        <strong><span t-out="totali['annullati']"/></strong> annullate,
+                        alla data del
+                        <span t-out="data_snapshot" t-options='{"widget": "datetime"}'/>.
+                    </p>
+                    <p style="margin-top: 36px;">
+                        Per il Crocevia dei Mondi APS - Il Legale Rappresentante
+                    </p>
+                    <p style="margin-top: 36px;">
+                        _____________________________
+                    </p>
+                    <p>
+                        <em>La firma digitale qualificata + marca temporale
+                        RFC 3161 sono applicate al PDF stesso esternamente
+                        e ne costituiscono la vidimazione.</em>
+                    </p>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <template id="report_registro_volontari">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="o">
+                <t t-call="crocevia_registro_volontari.report_volontari_doc"/>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_registro_volontari" model="ir.actions.report">
+        <field name="name">Snapshot registro volontari</field>
+        <field name="model">crocevia.registro.vidimazione</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crocevia_registro_volontari.report_registro_volontari</field>
+        <field name="report_file">crocevia_registro_volontari.report_registro_volontari</field>
+    </record>
+
+</odoo>

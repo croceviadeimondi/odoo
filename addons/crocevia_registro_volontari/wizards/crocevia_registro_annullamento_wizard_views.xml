@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_registro_annullamento_wizard_form" model="ir.ui.view">
+        <field name="name">crocevia.registro.annullamento.wizard.form</field>
+        <field name="model">crocevia.registro.annullamento.wizard</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <div class="alert alert-danger" role="alert">
+                        <strong>Annullamento iscrizione</strong>:
+                        l'iscrizione resta nel registro (write-once) ma
+                        marchiata come annullata. Per legge non si puo'
+                        cancellare. Spiega chiaramente il motivo.
+                    </div>
+                    <group>
+                        <field name="iscrizione_id" readonly="1"/>
+                    </group>
+                    <group string="Motivazione (min 20 caratteri)">
+                        <field name="motivazione" nolabel="1"
+                               placeholder="Es. errore di trascrizione del codice fiscale all'iscrizione del 15/03/2026"/>
+                    </group>
+                </sheet>
+                <footer>
+                    <button name="action_conferma" type="object"
+                            string="Conferma annullamento"
+                            class="btn-danger"
+                            confirm="Confermi l'annullamento? L'azione non è reversibile."/>
+                    <button string="Annulla" class="btn-secondary"
+                            special="cancel"/>
+                </footer>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_crocevia_registro_annullamento_wizard"
+            model="ir.actions.act_window">
+        <field name="name">Annulla iscrizione</field>
+        <field name="res_model">crocevia.registro.annullamento.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+</odoo>

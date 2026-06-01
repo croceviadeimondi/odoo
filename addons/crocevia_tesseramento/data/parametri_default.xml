@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Parametri di sistema con i default delle ricevute.
+             Modificabili da Impostazioni > Tecnico > Parametri di sistema
+             (o via xmlrpc). `noupdate=1` cosi' un upgrade del modulo non
+             sovrascrive i valori personalizzati dall'utente. -->
+
+        <record id="param_importo_obolo" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.importo_obolo</field>
+            <field name="value">2.0</field>
+        </record>
+
+        <record id="param_importo_mensile" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.importo_mensile</field>
+            <field name="value">10.0</field>
+        </record>
+
+        <record id="param_importo_tesseramento" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.importo_tesseramento</field>
+            <field name="value">10.0</field>
+        </record>
+
+        <record id="param_importo_evento_default" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.importo_evento_default</field>
+            <field name="value">3.0</field>
+        </record>
+
+        <!-- Dati bancari per EPC QR Code (verranno valorizzati dopo che
+             l'utente ci passa l'iban e l'intestatario). -->
+        <record id="param_iban" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.iban</field>
+            <field name="value"></field>
+        </record>
+
+        <record id="param_iban_intestatario" model="ir.config_parameter">
+            <field name="key">crocevia_tesseramento.iban_intestatario</field>
+            <field name="value">Crocevia dei Mondi APS</field>
+        </record>
+    </data>
+</odoo>

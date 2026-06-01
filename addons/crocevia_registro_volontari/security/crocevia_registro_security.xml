@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Riusa la categoria gia' definita da crocevia_tesseramento. -->
+        <record id="module_category_crocevia"
+                model="ir.module.category">
+            <field name="name">Crocevia dei Mondi</field>
+            <field name="description">Gestione del Crocevia dei Mondi APS.</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Lettura: vede il registro, niente altro. -->
+        <record id="group_registro_lettura" model="res.groups">
+            <field name="name">Registro Volontari - Lettura</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Puo' consultare il registro volontari e i log di annullamento. Niente modifica.</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+
+        <!-- Iscrizione: crea nuove iscrizioni, le cessa, annulla. Non firma. -->
+        <record id="group_registro_iscrizione" model="res.groups">
+            <field name="name">Registro Volontari - Gestione iscrizioni</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Puo' iscrivere nuovi volontari, cessarli e annullare iscrizioni con motivazione.</field>
+            <field name="implied_ids" eval="[(4, ref('group_registro_lettura'))]"/>
+        </record>
+
+        <!-- Responsabile: genera snapshot e vidima il registro
+             (firma+marca temporale). Tipicamente presidente o segretario. -->
+        <record id="group_registro_responsabile" model="res.groups">
+            <field name="name">Registro Volontari - Responsabile vidimazione</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Puo' generare lo snapshot del registro, caricare il PDF firmato esternamente e chiudere la vidimazione annuale.</field>
+            <field name="implied_ids" eval="[(4, ref('group_registro_iscrizione'))]"/>
+        </record>
+
+        <!-- Aggancio al ruolo unificato del direttivo: chi e' direttivo
+             ha automaticamente lettura + gestione iscrizioni. Il ruolo
+             "responsabile vidimazione" va invece assegnato manualmente
+             (e' un ruolo piu' ristretto, presidente + segretario). -->
+        <record id="crocevia_ruoli.group_crocevia_direttivo_master" model="res.groups">
+            <field name="implied_ids" eval="[(4, ref('group_registro_iscrizione'))]"/>
+        </record>
+    </data>
+</odoo>

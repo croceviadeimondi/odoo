@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Riusa la categoria del modulo tesseramento se gia' installata,
+             altrimenti la crea. La category_id rimane lo stesso "container"
+             nelle preferenze utente. -->
+        <record id="module_category_crocevia"
+                model="ir.module.category">
+            <field name="name">Crocevia dei Mondi</field>
+            <field name="description">Gestione tesseramento e inventario del Crocevia.</field>
+            <field name="sequence">20</field>
+        </record>
+
+        <!-- Gruppo gestione inventario. Implica `base.group_user` cosi'
+             chi ne fa parte e' anche utente interno. -->
+        <record id="group_crocevia_inventario" model="res.groups">
+            <field name="name">Inventario Crocevia</field>
+            <field name="category_id" ref="module_category_crocevia"/>
+            <field name="comment">Gestisce sedi, beni e prestiti dell'inventario del Crocevia.</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+</odoo>

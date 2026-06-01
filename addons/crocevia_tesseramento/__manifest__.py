@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Tesseramento",
-    'version': '18.0.1.0.0',
+    'version': '18.0.1.4.0',
     'summary': "Gestione tesseramento, cariche direttive e verbali per APS/ETS",
     'description': """
 Modulo custom per l'associazione di promozione sociale Crocevia dei Mondi.
@@ -14,7 +14,6 @@ Funzionalita:
   dal sito esterno (croceviadeimondi.org, Astro). Il form HTML vive sul sito,
   non in Odoo
 - Archivio minimo dei verbali (assemblee soci e riunioni del direttivo)
-- Esenzione automatica della quota associativa per i soci onorari
 """,
     'author': "Crocevia dei Mondi APS",
     'website': "https://croceviadeimondi.org",
@@ -24,17 +23,22 @@ Funzionalita:
         'base',
         'contacts',
         'mail',
-        'membership',
         'account',
     ],
     'data': [
         'security/crocevia_security.xml',
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
+        'data/parametri_default.xml',
         'views/res_partner_views.xml',
         'views/crocevia_carica_views.xml',
         'views/crocevia_richiesta_views.xml',
         'views/crocevia_verbale_views.xml',
+        'views/crocevia_ricevuta_views.xml',
+        'wizards/crocevia_ricevuta_wizards_views.xml',
+        'wizards/crocevia_qr_bonifico_wizard_views.xml',
+        'report/report_crocevia_ricevuta.xml',
+        'data/mail_template_data.xml',
         'views/menu_views.xml',
     ],
     'application': True,
