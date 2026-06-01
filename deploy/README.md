@@ -1,7 +1,7 @@
 # Deploy gestionale Odoo del Crocevia dei Mondi APS
 
 Procedura per portare in produzione il gestionale su VPS IONOS
-(`82.165.47.57`) sul sottodominio `gestionale.croceviadeimondi.org`.
+(`82.165.47.57`) sul sottodominio `odoo.croceviadeimondi.org`.
 
 Prerequisiti:
 
@@ -9,7 +9,7 @@ Prerequisiti:
 - Docker Engine + plugin `compose` gia' installati;
 - nginx host gia' attivo sul VPS con cert wildcard
   `*.croceviadeimondi.org` (gia' presente per il sito Astro);
-- record DNS A `gestionale.croceviadeimondi.org` → `82.165.47.57`
+- record DNS A `odoo.croceviadeimondi.org` → `82.165.47.57`
   pubblicato (si gestisce dal pannello IONOS).
 
 ---
@@ -19,13 +19,13 @@ Prerequisiti:
 Dal pannello IONOS aggiungi un record A:
 
 ```
-gestionale.croceviadeimondi.org   A   82.165.47.57   TTL 1h
+odoo.croceviadeimondi.org   A   82.165.47.57   TTL 1h
 ```
 
 Verifica:
 
 ```bash
-dig +short gestionale.croceviadeimondi.org
+dig +short odoo.croceviadeimondi.org
 # deve restituire 82.165.47.57
 ```
 
@@ -128,16 +128,16 @@ curl --max-time 3 -sI http://82.165.47.57:8069/ || echo "OK: porta non raggiungi
 ## 5. nginx reverse proxy
 
 ```bash
-sudo cp deploy/nginx/gestionale.croceviadeimondi.org.conf \
+sudo cp deploy/nginx/odoo.croceviadeimondi.org.conf \
     /etc/nginx/sites-available/
-sudo ln -s /etc/nginx/sites-available/gestionale.croceviadeimondi.org.conf \
+sudo ln -s /etc/nginx/sites-available/odoo.croceviadeimondi.org.conf \
     /etc/nginx/sites-enabled/
 
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-Apri il browser su `https://gestionale.croceviadeimondi.org/web/login`
+Apri il browser su `https://odoo.croceviadeimondi.org/web/login`
 e verifica che compaia la login Odoo dietro HTTPS.
 
 ---
@@ -254,7 +254,7 @@ Per testarlo dal tuo PC (NON dal VPS, ti banneresti):
 ```bash
 for i in $(seq 1 6); do
     curl -s -d 'login=admin&password=sbagliata' \
-        https://gestionale.croceviadeimondi.org/web/login > /dev/null
+        https://odoo.croceviadeimondi.org/web/login > /dev/null
 done
 # Sul VPS:
 sudo fail2ban-client status odoo
