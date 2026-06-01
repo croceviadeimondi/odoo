@@ -13,27 +13,20 @@
                     <button name="action_attiva_socio" type="object"
                             string="Attiva socio" class="oe_highlight"
                             invisible="stato_socio == 'attivo'"/>
-                    <button name="action_cessa_socio" type="object"
-                            string="Cessa socio"
-                            invisible="stato_socio == 'cessato' or not is_socio"
-                            confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
                     <!-- Quick-action ricevute. Visibili solo per soci attivi. -->
                     <button name="action_registra_obolo" type="object"
-                            string="Obolo +2€"
-                            invisible="stato_socio != 'attivo'"
-                            confirm="Registro un obolo da 2€ in contanti?"/>
+                            string="Obolo"
+                            invisible="stato_socio != 'attivo'"/>
                     <button name="action_registra_mensilita" type="object"
                             string="Mensilità"
-                            invisible="stato_socio != 'attivo'"/>
-                    <button name="action_registra_evento" type="object"
-                            string="Evento"
-                            invisible="stato_socio != 'attivo'"/>
-                    <button name="action_registra_tesseramento" type="object"
-                            string="Tesseramento"
                             invisible="stato_socio != 'attivo'"/>
                     <button name="action_mostra_qr_bonifico" type="object"
                             string="QR bonifico"
                             invisible="stato_socio != 'attivo'"/>
+                    <button name="action_cessa_socio" type="object"
+                            string="Cessa socio"
+                            invisible="stato_socio == 'cessato' or not is_socio"
+                            confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"
                            statusbar_visible="richiesta,attivo,cessato"/>
@@ -142,6 +135,116 @@
         </field>
     </record>
 
+    <!-- Form socio DEDICATO: mostra solo i campi rilevanti per un'APS,
+         senza il rumore del contatto standard (P.IVA, indirizzi multipli,
+         mobile, sito web, tab Vendite/Acquisti/Contatti). Usato solo
+         dall'azione Soci; il form contatto globale resta intatto per
+         fornitori, proprietari beni, ecc. -->
+    <record id="view_res_partner_socio_form" model="ir.ui.view">
+        <field name="name">res.partner.socio.form</field>
+        <field name="model">res.partner</field>
+        <field name="priority">32</field>
+        <field name="arch" type="xml">
+            <form string="Socio">
+                <header>
+                    <button name="action_attiva_socio" type="object"
+                            string="Attiva socio" class="oe_highlight"
+                            invisible="stato_socio == 'attivo'"/>
+                    <button name="action_registra_obolo" type="object"
+                            string="Obolo"
+                            invisible="stato_socio != 'attivo'"/>
+                    <button name="action_registra_mensilita" type="object"
+                            string="Mensilità"
+                            invisible="stato_socio != 'attivo'"/>
+                    <button name="action_mostra_qr_bonifico" type="object"
+                            string="QR bonifico"
+                            invisible="stato_socio != 'attivo'"/>
+                    <button name="action_cessa_socio" type="object"
+                            string="Cessa socio"
+                            invisible="stato_socio == 'cessato' or not is_socio"
+                            confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
+                    <field name="stato_socio" widget="statusbar"
+                           invisible="not is_socio"
+                           statusbar_visible="richiesta,attivo,cessato"/>
+                </header>
+                <sheet>
+                    <field name="is_socio" invisible="1"/>
+                    <div class="oe_title">
+                        <label for="name" string="Nome e cognome"/>
+                        <h1>
+                            <field name="name" placeholder="Nome e cognome"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <group string="Contatti">
+                            <field name="email" widget="email"/>
+                            <field name="phone" widget="phone"/>
+                        </group>
+                        <group string="Residenza">
+                            <field name="street"/>
+                            <field name="zip"/>
+                            <field name="city"/>
+                            <field name="state_id"
+                                   options="{'no_open': True, 'no_create': True}"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Socio" name="socio">
+                            <group>
+                                <group string="Status">
+                                    <field name="numero_socio"/>
+                                    <field name="categoria_socio"/>
+                                </group>
+                                <group string="Date">
+                                    <field name="data_iscrizione"/>
+                                    <field name="data_cessazione"
+                                           invisible="stato_socio != 'cessato'"/>
+                                    <field name="carica_attuale" readonly="1"/>
+                                </group>
+                            </group>
+                            <group string="Anagrafica privata (libro soci / RUNTS)">
+                                <group>
+                                    <field name="codice_fiscale"
+                                           placeholder="RSSMRA80A01H501U"/>
+                                    <field name="data_nascita"/>
+                                    <field name="luogo_nascita"/>
+                                </group>
+                                <group>
+                                    <field name="stato_civile"/>
+                                </group>
+                            </group>
+                            <separator string="Cariche direttive (storico)"/>
+                            <field name="carica_ids">
+                                <list editable="bottom">
+                                    <field name="ruolo"/>
+                                    <field name="data_nomina"/>
+                                    <field name="data_scadenza"/>
+                                    <field name="is_attuale" readonly="1" optional="show"/>
+                                    <field name="note" optional="hide"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Ricevute" name="ricevute"
+                              invisible="not is_socio">
+                            <field name="ricevuta_ids" readonly="1">
+                                <list decoration-info="tipo == 'donazione'">
+                                    <field name="numero"/>
+                                    <field name="data"/>
+                                    <field name="tipo" widget="badge"/>
+                                    <field name="mese_riferimento" optional="show"/>
+                                    <field name="importo" widget="monetary" sum="Totale"/>
+                                    <field name="currency_id" column_invisible="1"/>
+                                    <field name="metodo"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
     <!-- Azione "Soci" filtrata su is_socio=True -->
     <record id="action_soci" model="ir.actions.act_window">
         <field name="name">Soci</field>
@@ -153,7 +256,6 @@
             'default_company_type': 'person',
             'search_default_filter_attivi': 1,
         }</field>
-        <field name="view_id" ref="view_res_partner_socio_list"/>
         <field name="search_view_id" ref="base.view_res_partner_filter"/>
         <field name="help" type="html">
             <p class="o_view_nocontent_smiling_face">
@@ -164,6 +266,30 @@
                 <a href="#" data-menu-xmlid="crocevia_tesseramento.menu_crocevia_richieste">richiesta di iscrizione</a>.
             </p>
         </field>
+    </record>
+
+    <!-- Binding esplicito list + form dedicato all'azione Soci.
+         La kanban non e' elencata: usa quella di default. -->
+    <record id="action_soci_view_list" model="ir.actions.act_window.view">
+        <field name="sequence" eval="1"/>
+        <field name="view_mode">list</field>
+        <field name="view_id" ref="view_res_partner_socio_list"/>
+        <field name="act_window_id" ref="action_soci"/>
+    </record>
+    <record id="action_soci_view_form" model="ir.actions.act_window.view">
+        <field name="sequence" eval="2"/>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_res_partner_socio_form"/>
+        <field name="act_window_id" ref="action_soci"/>
+    </record>
+
+    <!-- Wizard nativo di merge contatti, pre-aperto per unire soci
+         duplicati (i guardrail CDM sono in models/base_partner_merge.py). -->
+    <record id="action_unifica_soci" model="ir.actions.act_window">
+        <field name="name">Unifica soci duplicati</field>
+        <field name="res_model">base.partner.merge.automatic.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
     </record>
 
 </odoo>

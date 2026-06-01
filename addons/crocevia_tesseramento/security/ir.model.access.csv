@@ -7,6 +7,5 @@ access_crocevia_carica_user_ro,crocevia.carica utenti interni readonly,model_cro
 access_crocevia_verbale_user_ro,crocevia.verbale utenti interni readonly,model_crocevia_verbale,base.group_user,1,0,0,0
 access_crocevia_ricevuta_user_ro,crocevia.ricevuta utenti interni readonly,model_crocevia_ricevuta,base.group_user,1,0,0,0
 access_crocevia_ricevuta_mensilita_wiz,crocevia.ricevuta.mensilita.wizard direttivo,model_crocevia_ricevuta_mensilita_wizard,group_crocevia_direttivo,1,1,1,1
-access_crocevia_ricevuta_quota_wiz,crocevia.ricevuta.quota.wizard direttivo,model_crocevia_ricevuta_quota_wizard,group_crocevia_direttivo,1,1,1,1
-access_crocevia_ricevuta_evento_wiz,crocevia.ricevuta.evento.wizard direttivo,model_crocevia_ricevuta_evento_wizard,group_crocevia_direttivo,1,1,1,1
+access_crocevia_ricevuta_obolo_wiz,crocevia.ricevuta.obolo.wizard direttivo,model_crocevia_ricevuta_obolo_wizard,group_crocevia_direttivo,1,1,1,1
 access_crocevia_qr_bonifico_wiz,crocevia.qr.bonifico.wizard direttivo,model_crocevia_qr_bonifico_wizard,group_crocevia_direttivo,1,1,1,1

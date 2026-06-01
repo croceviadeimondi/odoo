@@ -22,7 +22,7 @@ sistema con chiavi `crocevia_tesseramento.importo_*`.
 import re
 
 from odoo import api, fields, models, _
-from odoo.exceptions import ValidationError
+from odoo.exceptions import UserError, ValidationError
 
 
 TIPO_RICEVUTA_SELECTION = [
@@ -199,3 +199,34 @@ class CroceviaRicevuta(models.Model):
             tipo_label = tipo_dict.get(r.tipo, r.tipo or '')
             num = r.numero if r.numero and r.numero != NOME_PLACEHOLDER else '(nuova)'
             r.display_name = "%s - %s - %s" % (num, partner, tipo_label)
+
+    # ----------------- invio email -----------------
+
+    def action_invia_ricevuta_email(self):
+        """Apre il compositore email precompilato col template ricevuta
+        (PDF allegato), per revisione prima dell'invio manuale."""
+        self.ensure_one()
+        if not self.partner_id.email:
+            raise UserError(_(
+                "Il socio %s non ha un indirizzo email: impostalo prima di "
+                "inviare la ricevuta."
+            ) % self.partner_id.display_name)
+        template = self.env.ref(
+            'crocevia_tesseramento.mail_template_ricevuta',
+            raise_if_not_found=False)
+        ctx = {
+            'default_model': 'crocevia.ricevuta',
+            'default_res_ids': self.ids,
+            'default_template_id': template.id if template else False,
+            'default_composition_mode': 'comment',
+            'force_email': True,
+        }
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _("Invia ricevuta via email"),
+            'res_model': 'mail.compose.message',
+            'view_mode': 'form',
+            'views': [(False, 'form')],
+            'target': 'new',
+            'context': ctx,
+        }

@@ -54,6 +54,10 @@
         <field name="parent_id" ref="menu_soci_root"/>
         <field name="sequence">10</field>
     </record>
+    <record id="crocevia_tesseramento.menu_crocevia_unifica_soci" model="ir.ui.menu">
+        <field name="parent_id" ref="menu_soci_root"/>
+        <field name="sequence">15</field>
+    </record>
     <record id="crocevia_tesseramento.menu_crocevia_richieste" model="ir.ui.menu">
         <field name="parent_id" ref="menu_soci_root"/>
         <field name="sequence">20</field>

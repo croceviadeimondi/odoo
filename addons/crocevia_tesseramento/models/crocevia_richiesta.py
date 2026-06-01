@@ -104,6 +104,13 @@ class CroceviaRichiestaIscrizione(models.Model):
             r.message_post(body=_(
                 "Richiesta approvata. Socio creato: <b>%s</b> (n. %s)."
             ) % (partner.display_name, partner.numero_socio))
+            # Email di benvenuto automatica al nuovo socio (best-effort:
+            # un errore di invio non deve far fallire l'approvazione).
+            template = self.env.ref(
+                'crocevia_tesseramento.mail_template_conferma_iscrizione',
+                raise_if_not_found=False)
+            if template and partner.email:
+                template.send_mail(partner.id, force_send=False)
 
     @staticmethod
     def _build_comment(r):

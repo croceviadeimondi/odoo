@@ -14,6 +14,12 @@
               action="action_soci"
               sequence="10"/>
 
+    <menuitem id="menu_crocevia_unifica_soci"
+              name="Unifica soci duplicati"
+              parent="menu_crocevia_root"
+              action="action_unifica_soci"
+              sequence="15"/>
+
     <menuitem id="menu_crocevia_richieste"
               name="Richieste iscrizione"
               parent="menu_crocevia_root"

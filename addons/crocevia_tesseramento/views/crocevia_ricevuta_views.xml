@@ -24,6 +24,11 @@
         <field name="model">crocevia.ricevuta</field>
         <field name="arch" type="xml">
             <form>
+                <header>
+                    <button name="action_invia_ricevuta_email" type="object"
+                            string="Invia via email" class="oe_highlight"
+                            invisible="not numero or numero == 'Nuovo'"/>
+                </header>
                 <sheet>
                     <div class="oe_title">
                         <label for="numero" string="Numero"/>

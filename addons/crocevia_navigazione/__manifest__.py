@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Riorganizzazione menu",
-    'version': '18.0.2.0.0',
+    'version': '18.0.2.1.0',
     'summary': "Raggruppa i menu di Odoo per funzione: Soci, Cassa, Atti, Volontariato",
     'description': """
 Modulo di sola configurazione: ridisegna la barra app di Odoo

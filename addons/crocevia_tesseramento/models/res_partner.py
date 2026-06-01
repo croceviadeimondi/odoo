@@ -120,22 +120,15 @@ class ResPartner(models.Model):
     # ----------------- ricevute: bottoni quick-action -----------------
 
     def action_registra_obolo(self):
-        """Obolo da 2 EUR (fisso), in contanti, registrato in 1 click."""
+        """Apre wizard obolo (importo modificabile, default 2 EUR)."""
         self.ensure_one()
-        importo = self._param_importo('crocevia_tesseramento.importo_obolo', 2.0)
-        ricevuta = self.env['crocevia.ricevuta'].create({
-            'partner_id': self.id,
-            'tipo': 'obolo_giornaliero',
-            'importo': importo,
-            'metodo': 'contanti',
-        })
         return {
             'type': 'ir.actions.act_window',
-            'name': 'Ricevuta obolo',
-            'res_model': 'crocevia.ricevuta',
-            'res_id': ricevuta.id,
+            'name': 'Registra obolo',
+            'res_model': 'crocevia.ricevuta.obolo.wizard',
             'view_mode': 'form',
-            'target': 'current',
+            'target': 'new',
+            'context': {'default_partner_id': self.id},
         }
 
     def action_registra_mensilita(self):
@@ -149,38 +142,6 @@ class ResPartner(models.Model):
             'target': 'new',
             'context': {'default_partner_id': self.id},
         }
-
-    def action_registra_evento(self):
-        """Apre wizard evento (importo modificabile, default 3 EUR)."""
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Registra contributo evento',
-            'res_model': 'crocevia.ricevuta.evento.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_partner_id': self.id},
-        }
-
-    def action_registra_tesseramento(self):
-        """Apre wizard tesseramento (10 EUR di default, copre 1a mensilita')."""
-        self.ensure_one()
-        return {
-            'type': 'ir.actions.act_window',
-            'name': 'Registra tesseramento',
-            'res_model': 'crocevia.ricevuta.quota.wizard',
-            'view_mode': 'form',
-            'target': 'new',
-            'context': {'default_partner_id': self.id},
-        }
-
-    def _param_importo(self, key, fallback):
-        """Legge un importo dai parametri di sistema con fallback float."""
-        try:
-            return float(self.env['ir.config_parameter'].sudo()
-                         .get_param(key, str(fallback)))
-        except (TypeError, ValueError):
-            return float(fallback)
 
     def action_mostra_qr_bonifico(self):
         """Apre wizard col QR EPC per fare un bonifico SEPA precompilato

@@ -1,16 +1,13 @@
 """
 Wizard transient per registrare ricevute con flusso veloce.
 
-Tre wizard, uno per ciascun tipo che richiede input variabili (importo
-o mese):
-- `crocevia.ricevuta.mensilita.wizard`  -> sceglie mese e conferma 10 EUR
-- `crocevia.ricevuta.evento.wizard`     -> importo (default 3 EUR) e
-                                           descrizione evento
-- `crocevia.ricevuta.quota.wizard`      -> sceglie mese (il tesseramento
-                                           copre la prima mensilita')
+Due wizard, uno per ciascun tipo registrato dalla scheda socio:
+- `crocevia.ricevuta.mensilita.wizard`  -> sceglie mese e importo (10 EUR)
+- `crocevia.ricevuta.obolo.wizard`      -> importo (default 2 EUR)
 
-L'obolo NON ha wizard: 2 EUR fissi, partono dalla scheda socio con un
-click sul bottone "Obolo +2".
+Il tesseramento non ha quick-action: e' implicito nell'iscrizione al
+libro soci e la prima mensilita' lo copre gia'. Il contributo evento
+resta un `tipo` di ricevuta, ma si crea dalla scheda ricevuta a mano.
 
 Tutti i wizard hanno `partner_id` precompilato dal contesto, e creano
 un record `crocevia.ricevuta` alla conferma.
@@ -120,28 +117,19 @@ class CroceviaRicevutaMensilitaWizard(models.TransientModel):
 
 
 # ---------------------------------------------------------------------
-# Quota annuale (copre anche la prima mensilità)
+# Obolo giornaliero (importo modificabile, default 2 EUR)
 # ---------------------------------------------------------------------
 
-class CroceviaRicevutaQuotaWizard(models.TransientModel):
-    _name = 'crocevia.ricevuta.quota.wizard'
-    _description = "Registra tesseramento"
+class CroceviaRicevutaOboloWizard(models.TransientModel):
+    _name = 'crocevia.ricevuta.obolo.wizard'
+    _description = "Registra obolo"
     _inherit = 'crocevia.ricevuta.wizard.base'
 
-    mese_riferimento = fields.Char(
-        string="Mese coperto",
-        required=True,
-        size=7,
-        default=lambda self: fields.Date.context_today(self).strftime('%Y-%m'),
-        help="Il tesseramento copre la prima mensilita': indica qui il "
-             "mese a partire dal quale il socio risulta in regola "
-             "(formato YYYY-MM).",
-    )
     importo = fields.Monetary(
         string="Importo",
         required=True,
         default=lambda self: self._param(
-            self.env, 'crocevia_tesseramento.importo_tesseramento', '10.0'),
+            self.env, 'crocevia_tesseramento.importo_obolo', '2.0'),
     )
     currency_id = fields.Many2one(
         'res.currency',
@@ -153,55 +141,10 @@ class CroceviaRicevutaQuotaWizard(models.TransientModel):
         r = self.env['crocevia.ricevuta'].create({
             'partner_id': self.partner_id.id,
             'data': self.data,
-            'tipo': 'tesseramento',
-            'mese_riferimento': self.mese_riferimento,
+            'tipo': 'obolo_giornaliero',
             'importo': self.importo,
             'metodo': self.metodo,
             'riferimento': self.riferimento,
             'note': self.note,
-        })
-        return self._apri_ricevuta(r)
-
-
-# ---------------------------------------------------------------------
-# Contributo evento (importo libero, range 3-5 EUR)
-# ---------------------------------------------------------------------
-
-class CroceviaRicevutaEventoWizard(models.TransientModel):
-    _name = 'crocevia.ricevuta.evento.wizard'
-    _description = "Registra contributo evento"
-    _inherit = 'crocevia.ricevuta.wizard.base'
-
-    importo = fields.Monetary(
-        string="Importo",
-        required=True,
-        default=lambda self: self._param(
-            self.env, 'crocevia_tesseramento.importo_evento_default', '3.0'),
-    )
-    currency_id = fields.Many2one(
-        'res.currency',
-        default=lambda self: self.env.company.currency_id,
-    )
-    descrizione_evento = fields.Char(
-        string="Nome evento",
-        help="Es. 'Festival Crocevia 2026', 'Torneo Magic novembre'. "
-             "Viene salvato nelle note della ricevuta per riferimento.",
-    )
-
-    def action_conferma(self):
-        self.ensure_one()
-        note_combinate = self.note or ''
-        if self.descrizione_evento:
-            riga_evento = _("Evento: %s") % self.descrizione_evento
-            note_combinate = (riga_evento + "\n" + note_combinate
-                              if note_combinate else riga_evento)
-        r = self.env['crocevia.ricevuta'].create({
-            'partner_id': self.partner_id.id,
-            'data': self.data,
-            'tipo': 'contributo_evento',
-            'importo': self.importo,
-            'metodo': self.metodo,
-            'riferimento': self.riferimento,
-            'note': note_combinate or False,
         })
         return self._apri_ricevuta(r)
