@@ -12,20 +12,25 @@
                 <header>
                     <button name="action_attiva_socio" type="object"
                             string="Attiva socio" class="oe_highlight"
-                            invisible="stato_socio == 'attivo'"/>
+                            invisible="stato_socio == 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <!-- Quick-action ricevute. Visibili solo per soci attivi. -->
                     <button name="action_registra_obolo" type="object"
                             string="Obolo"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_registra_mensilita" type="object"
                             string="Mensilità"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_mostra_qr_bonifico" type="object"
                             string="QR bonifico"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_cessa_socio" type="object"
                             string="Cessa socio"
                             invisible="stato_socio == 'cessato' or not is_socio"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"
                             confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"
@@ -156,19 +161,24 @@
                 <header>
                     <button name="action_attiva_socio" type="object"
                             string="Attiva socio" class="oe_highlight"
-                            invisible="stato_socio == 'attivo'"/>
+                            invisible="stato_socio == 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_registra_obolo" type="object"
                             string="Obolo"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_registra_mensilita" type="object"
                             string="Mensilità"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_mostra_qr_bonifico" type="object"
                             string="QR bonifico"
-                            invisible="stato_socio != 'attivo'"/>
+                            invisible="stato_socio != 'attivo'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <button name="action_cessa_socio" type="object"
                             string="Cessa socio"
                             invisible="stato_socio == 'cessato' or not is_socio"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"
                             confirm="Confermi la cessazione del socio? Verrà impostata la data odierna come data di cessazione."/>
                     <field name="stato_socio" widget="statusbar"
                            invisible="not is_socio"

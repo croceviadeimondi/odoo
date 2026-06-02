@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!--
+      Visibilita' dei menu per la scala ruoli.
+      Sta qui (crocevia_ruoli) perche' e' l'unico modulo che dipende sia
+      dai root menu (navigazione, inventario) sia dai gruppi del ruolo.
+        - Soci, Inventario, Volontariato -> Membro+ (operativi)
+        - Cassa, Assemblee               -> Amministrazione+ (gestione)
+      Applicazioni/Impostazioni restano riservate al sistema (Direttivo),
+      Progetti/Todo/Calendario restano visibili a tutti (default core).
+      Il root "Registro Volontari" lo gating lo fa il suo modulo.
+    -->
+
+    <record id="crocevia_navigazione.menu_soci_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_membro')])]"/>
+    </record>
+    <record id="crocevia_navigazione.menu_volontariato_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_membro')])]"/>
+    </record>
+    <record id="crocevia_inventario.menu_crocevia_inventario_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_membro')])]"/>
+    </record>
+
+    <record id="crocevia_navigazione.menu_cassa_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_amministrazione')])]"/>
+    </record>
+    <record id="crocevia_navigazione.menu_atti_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_amministrazione')])]"/>
+    </record>
+
+    <!-- "Applicazioni" (gestione moduli) va riservata al sistema = solo
+         Direttivo. "Impostazioni" e' gia' riservata al sistema da Odoo. -->
+    <record id="base.menu_management" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6, 0, [ref('base.group_system')])]"/>
+    </record>
+
+</odoo>

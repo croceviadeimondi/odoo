@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Volontariato",
-    'version': '18.0.1.1.0',
+    'version': '18.0.1.1.1',
     'summary': "Libro dei volontari APS + tracciamento ore (art. 17 CTS), light alternativo a hr",
     'description': """
 Modulo custom per il libro dei volontari del Crocevia dei Mondi APS.

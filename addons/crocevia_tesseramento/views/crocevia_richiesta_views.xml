@@ -27,13 +27,19 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <!-- Approva/Rifiuta: solo Amministrazione+ (il gruppo
+                         direttivo di tesseramento, che l'Amministrazione
+                         implica). Il Membro puo' creare richieste ma non
+                         validarle. -->
                     <button name="action_approva" type="object"
                             string="Approva" class="oe_highlight"
                             invisible="state != 'nuova'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"
                             confirm="Confermi l'approvazione? Verrà creato un nuovo socio con numero progressivo."/>
                     <button name="action_rifiuta" type="object"
                             string="Rifiuta"
-                            invisible="state != 'nuova'"/>
+                            invisible="state != 'nuova'"
+                            groups="crocevia_tesseramento.group_crocevia_direttivo"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="nuova,approvata,rifiutata"/>
                 </header>

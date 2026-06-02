@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_membro_bene,crocevia.bene membro,crocevia_inventario.model_crocevia_bene,group_crocevia_membro,1,1,1,0
+access_membro_bene_genere,crocevia.bene.genere membro,crocevia_inventario.model_crocevia_bene_genere,group_crocevia_membro,1,1,1,0
+access_membro_bene_sistema,crocevia.bene.sistema membro,crocevia_inventario.model_crocevia_bene_sistema,group_crocevia_membro,1,1,1,0
+access_membro_prestito,crocevia.prestito membro,crocevia_inventario.model_crocevia_prestito,group_crocevia_membro,1,1,1,0
+access_membro_sede,crocevia.sede membro ro,crocevia_inventario.model_crocevia_sede,group_crocevia_membro,1,0,0,0
+access_membro_bene_wizard,crocevia.bene.wizard membro,crocevia_inventario.model_crocevia_bene_wizard,group_crocevia_membro,1,1,1,1
+access_membro_attivita_vol,crocevia.attivita.volontariato membro,crocevia_volontariato.model_crocevia_attivita_volontariato,group_crocevia_membro,1,1,1,0
+access_membro_richiesta,crocevia.richiesta.iscrizione membro,crocevia_tesseramento.model_crocevia_richiesta_iscrizione,group_crocevia_membro,1,0,1,0
