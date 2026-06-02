@@ -31,6 +31,23 @@
               action="action_crocevia_sede"
               sequence="30"/>
 
+    <menuitem id="menu_crocevia_inventario_config"
+              name="Configurazione"
+              parent="menu_crocevia_inventario_root"
+              sequence="90"/>
+
+    <menuitem id="menu_crocevia_inventario_generi"
+              name="Generi"
+              parent="menu_crocevia_inventario_config"
+              action="action_crocevia_bene_genere"
+              sequence="10"/>
+
+    <menuitem id="menu_crocevia_inventario_sistemi"
+              name="Sistemi di gioco"
+              parent="menu_crocevia_inventario_config"
+              action="action_crocevia_bene_sistema"
+              sequence="20"/>
+
     <!-- Icone dei menu: web_icon via <record> di update (vedi nota in
          crocevia_tesseramento/views/menu_views.xml). -->
     <record id="menu_crocevia_inventario_root" model="ir.ui.menu">
