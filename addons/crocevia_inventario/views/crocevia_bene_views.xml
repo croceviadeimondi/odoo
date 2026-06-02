@@ -154,7 +154,10 @@
                             context="{'group_by': 'categoria'}"/>
                     <filter string="Genere" name="group_genere"
                             context="{'group_by': 'genere_ids'}"/>
-                    <filter string="Sistema" name="group_sistema"
+                    <!-- Raggruppa per sistema: filtra anche ai soli giochi
+                         di ruolo, cosi' nasconde libri e altri beni. -->
+                    <filter string="Sistema (giochi di ruolo)" name="group_sistema"
+                            domain="[('categoria', '=', 'gioco_di_ruolo')]"
                             context="{'group_by': 'sistema_id'}"/>
                     <filter string="Stato prestito" name="group_prestito"
                             context="{'group_by': 'in_prestito'}"/>
