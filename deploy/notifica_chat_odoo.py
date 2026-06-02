@@ -21,8 +21,13 @@ Esempio (sul VPS):
 """
 import os
 
+from markupsafe import Markup
+
 CHANNEL_NAME = os.environ.get("CHAT_CHANNEL", "Sistema")
-BODY = os.environ.get("CHAT_MSG", "Notifica di sistema dal gestionale.")
+# In Odoo 18 message_post(body=...) escapa le str normali (anti-injection):
+# i tag HTML apparirebbero in chiaro. Markup() segnala che il body e' HTML
+# gia' sicuro e va renderizzato.
+BODY = Markup(os.environ.get("CHAT_MSG", "Notifica di sistema dal gestionale."))
 
 Channel = env["discuss.channel"]  # noqa: F821 (env iniettato da odoo shell)
 channel = Channel.search([("name", "=", CHANNEL_NAME)], limit=1)
