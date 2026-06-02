@@ -195,10 +195,10 @@ def build_gdr(row):
     if not titolo:
         return None
     anno = parse_anno(row.get('EDIZIONE', ''))
-    note = []
+    # Il sistema del GdR (D&D, Pathfinder, ...) va nel campo strutturato
+    # `genere` (etichettato "Genere / Sistema"), non piu' solo in nota.
     sistema = normalizza_testo(row.get('SISTEMA', ''))
-    if sistema:
-        note.append(f"Sistema: {sistema}")
+    note = []
     n = parse_placeholder(row.get('NOTE', ''))
     if n:
         note.append(n)
@@ -214,6 +214,7 @@ def build_gdr(row):
     return {
         'name': titolo,
         'categoria': 'gioco_di_ruolo',
+        'genere': sistema,
         'autore': parse_placeholder(row.get('AUTORƏ', '')),
         'editore': parse_placeholder(row.get('EDITORE', '')),
         'anno_pubblicazione': anno,

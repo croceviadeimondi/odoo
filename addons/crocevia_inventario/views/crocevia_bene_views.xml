@@ -68,7 +68,7 @@
                         </group>
                         <group>
                             <field name="genere"
-                                   invisible="categoria not in ('libro', 'manuale')"/>
+                                   invisible="categoria not in ('libro', 'manuale', 'gioco_di_ruolo')"/>
                             <field name="autore"/>
                             <field name="editore"/>
                             <field name="anno_pubblicazione"/>
