@@ -32,9 +32,13 @@ fi
 BACKUP_DIR="${BACKUP_DIR:-/opt/crocevia/backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
 DB_CONTAINER="${DB_CONTAINER:-crocevia-odoo-db}"
+ODOO_CONTAINER="${ODOO_CONTAINER:-crocevia-odoo}"
 DB_USER="${DB_USER:-odoo}"
 DB_NAME="${DB_NAME:-crocevia}"
 FILESTORE_VOLUME="${FILESTORE_VOLUME:-crocevia-odoo_odoo-data}"
+
+# Notifica nella chat interna di Odoo (Discuss). Vuoto = disattivata.
+ODOO_CHAT_CHANNEL="${ODOO_CHAT_CHANNEL:-}"   # es. "Sistema"
 
 # Offsite (vuoti = disattivato). Vedi backup.env.example.
 RCLONE_REMOTE="${RCLONE_REMOTE:-}"            # es. gdrive:crocevia-odoo-backup
@@ -115,6 +119,20 @@ if [[ -n "$BACKUP_EMAIL_TO" ]]; then
         log "Invio backup via email a $BACKUP_EMAIL_TO..."
         ATTACH="$ARCHIVE" python3 "$SCRIPT_DIR/_send_backup_mail.py" "$ARCHIVE" "$SIZE_H" \
             && log "Email inviata" || log "ATTENZIONE: invio email fallito"
+    fi
+fi
+
+# 5c. Notifica nella chat interna di Odoo (Discuss), come OdooBot.
+if [[ -n "$ODOO_CHAT_CHANNEL" ]]; then
+    log "Notifica chat Odoo (canale '$ODOO_CHAT_CHANNEL')..."
+    # Messaggio volutamente conciso: una riga, niente rumore.
+    MSG="Backup gestionale ok: $SIZE_H ($(basename "$ARCHIVE"))"
+    if docker exec -i -e CHAT_CHANNEL="$ODOO_CHAT_CHANNEL" -e CHAT_MSG="$MSG" "$ODOO_CONTAINER" \
+        sh -c "odoo shell -d $DB_NAME --no-http --db_host=\$HOST --db_user=\$USER --db_password=\$PASSWORD --db_port=5432 --shell-interface=python" \
+        < "$SCRIPT_DIR/notifica_chat_odoo.py" >/dev/null 2>&1; then
+        log "Notifica chat inviata"
+    else
+        log "ATTENZIONE: notifica chat fallita (backup comunque salvo)"
     fi
 fi
 
