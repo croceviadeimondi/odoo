@@ -214,7 +214,7 @@ def build_gdr(row):
     return {
         'name': titolo,
         'categoria': 'gioco_di_ruolo',
-        'genere': sistema,
+        'sistema_id': sistema,
         'autore': parse_placeholder(row.get('AUTORƏ', '')),
         'editore': parse_placeholder(row.get('EDITORE', '')),
         'anno_pubblicazione': anno,
@@ -353,7 +353,7 @@ def build_libro(row, genere):
     return {
         'name': titolo,
         'categoria': 'libro',
-        'genere': genere,
+        'genere_ids': genere,
         'autore': _col(row, 'AUTORE / AUTRICE', 'AUTORE/AUTRICE'),
         'editore': _col(row, 'CASA EDITRICE'),
         'anno_pubblicazione': anno,
@@ -470,7 +470,7 @@ def main():
             args.lib_trani, 'crocevia_inventario.sede_trani', out_rows, stats)
 
     fieldnames = [
-        'id', 'name', 'categoria', 'genere', 'sede_id/id',
+        'id', 'name', 'categoria', 'genere_ids', 'sistema_id', 'sede_id/id',
         'autore', 'editore', 'anno_pubblicazione',
         'proprietario_id/.id', 'proprietario_libero', 'note',
     ]

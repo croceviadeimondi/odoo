@@ -38,12 +38,17 @@ class CroceviaBene(models.Model):
         copy=False,
         help="Codice univoco per etichette/inventario (es. BTL-001).",
     )
-    genere = fields.Char(
-        string="Genere / Sistema",
+    genere_ids = fields.Many2many(
+        'crocevia.bene.genere',
+        string="Generi",
+        help="Generi/collane (Romanzi, Fumetti, Manga, Biografie...). "
+             "Un bene puo' averne piu' di uno. Validi anche per i giochi.",
+    )
+    sistema_id = fields.Many2one(
+        'crocevia.bene.sistema',
+        string="Sistema di gioco",
         index=True,
-        help="Per i libri: genere/collana (Romanzi, Fumetti, Manga, "
-             "Biografie). Per i giochi di ruolo: il sistema (D&D 5e, "
-             "Pathfinder, ...). Utile per filtrare e raggruppare.",
+        help="Per i giochi di ruolo: il sistema (D&D 5e, Pathfinder, ...).",
     )
     autore = fields.Char(string="Autore")
     editore = fields.Char(string="Editore")
@@ -141,3 +146,27 @@ class CroceviaBene(models.Model):
         self.ensure_one()
         if self.prestito_corrente_id:
             self.prestito_corrente_id.action_restituisci()
+
+
+class CroceviaBeneGenere(models.Model):
+    _name = 'crocevia.bene.genere'
+    _description = "Genere di un bene (libro, gioco...)"
+    _order = 'name'
+
+    name = fields.Char(string="Genere", required=True)
+
+    _sql_constraints = [
+        ('name_uniq', 'unique(name)', "Questo genere esiste gia'."),
+    ]
+
+
+class CroceviaBeneSistema(models.Model):
+    _name = 'crocevia.bene.sistema'
+    _description = "Sistema di gioco (per i giochi di ruolo)"
+    _order = 'name'
+
+    name = fields.Char(string="Sistema", required=True)
+
+    _sql_constraints = [
+        ('name_uniq', 'unique(name)', "Questo sistema esiste gia'."),
+    ]

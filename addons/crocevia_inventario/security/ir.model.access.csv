@@ -6,3 +6,7 @@ access_crocevia_sede_user_ro,crocevia.sede utenti interni readonly,model_crocevi
 access_crocevia_bene_user_ro,crocevia.bene utenti interni readonly,model_crocevia_bene,base.group_user,1,0,0,0
 access_crocevia_prestito_user_ro,crocevia.prestito utenti interni readonly,model_crocevia_prestito,base.group_user,1,0,0,0
 access_crocevia_bene_wizard,crocevia.bene.wizard inventario,model_crocevia_bene_wizard,group_crocevia_inventario,1,1,1,1
+access_crocevia_bene_genere_inventario,crocevia.bene.genere inventario,model_crocevia_bene_genere,group_crocevia_inventario,1,1,1,1
+access_crocevia_bene_sistema_inventario,crocevia.bene.sistema inventario,model_crocevia_bene_sistema,group_crocevia_inventario,1,1,1,1
+access_crocevia_bene_genere_user_ro,crocevia.bene.genere utenti interni readonly,model_crocevia_bene_genere,base.group_user,1,0,0,0
+access_crocevia_bene_sistema_user_ro,crocevia.bene.sistema utenti interni readonly,model_crocevia_bene_sistema,base.group_user,1,0,0,0

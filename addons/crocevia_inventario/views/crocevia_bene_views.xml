@@ -10,7 +10,8 @@
                 <field name="codice_interno" optional="show"/>
                 <field name="name"/>
                 <field name="categoria" widget="badge"/>
-                <field name="genere" optional="show"/>
+                <field name="genere_ids" widget="many2many_tags" optional="show"/>
+                <field name="sistema_id" optional="show"/>
                 <field name="sede_id"/>
                 <field name="autore" optional="hide"/>
                 <field name="editore" optional="hide"/>
@@ -67,8 +68,11 @@
                             <field name="active" invisible="1"/>
                         </group>
                         <group>
-                            <field name="genere"
-                                   invisible="categoria not in ('libro', 'manuale', 'gioco_di_ruolo')"/>
+                            <field name="sistema_id"
+                                   options="{'no_quick_create': True}"
+                                   invisible="categoria != 'gioco_di_ruolo'"/>
+                            <field name="genere_ids" widget="many2many_tags"
+                                   options="{'no_quick_create': True}"/>
                             <field name="autore"/>
                             <field name="editore"/>
                             <field name="anno_pubblicazione"/>
@@ -123,7 +127,8 @@
                 <field name="name"/>
                 <field name="codice_interno"/>
                 <field name="autore"/>
-                <field name="genere"/>
+                <field name="genere_ids"/>
+                <field name="sistema_id"/>
                 <field name="sede_id"/>
                 <field name="categoria"/>
                 <field name="proprietario_id"/>
@@ -148,7 +153,9 @@
                     <filter string="Categoria" name="group_categoria"
                             context="{'group_by': 'categoria'}"/>
                     <filter string="Genere" name="group_genere"
-                            context="{'group_by': 'genere'}"/>
+                            context="{'group_by': 'genere_ids'}"/>
+                    <filter string="Sistema" name="group_sistema"
+                            context="{'group_by': 'sistema_id'}"/>
                     <filter string="Stato prestito" name="group_prestito"
                             context="{'group_by': 'in_prestito'}"/>
                 </group>
@@ -170,6 +177,18 @@
                 gia' esistente da file CSV/Excel (menu Azioni - Importa).
             </p>
         </field>
+    </record>
+
+    <record id="action_crocevia_bene_genere" model="ir.actions.act_window">
+        <field name="name">Generi</field>
+        <field name="res_model">crocevia.bene.genere</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <record id="action_crocevia_bene_sistema" model="ir.actions.act_window">
+        <field name="name">Sistemi di gioco</field>
+        <field name="res_model">crocevia.bene.sistema</field>
+        <field name="view_mode">list,form</field>
     </record>
 
 </odoo>
