@@ -12,26 +12,38 @@ schema di colonne diverso:
 I fogli "Wishlist GDT", "Wishlist GDR", "Vecchio GDT", "Vecchio GDR"
 sono IGNORATI di proposito.
 
+C'e' anche la LIBRERIA: workbook separati (uno per sede), con un foglio
+per genere (Romanzi, Fumetti, Manga, Biografie, ...). Tutti i fogli
+diventano categoria `libro`, col campo `genere` preso dal nome del
+foglio. I prestiti annotati nei fogli vanno in nota (niente dati
+personali strutturati).
+
 USO (gira sul TUO PC, non in repo; richiede openpyxl):
 
-    # scarica i DUE workbook INTERI (tutti i fogli) come xlsx.
+    # GIOCHI: scarica i DUE workbook INTERI come xlsx.
     # NB: format=csv esporterebbe solo il primo foglio -> usare xlsx.
     curl -sL -o /tmp/wb_barletta.xlsx \\
         "https://docs.google.com/spreadsheets/d/1tZppwz2MvnN2PDLi2XSsvGolPN-ZAv3MyHADqkiuz7Q/export?format=xlsx"
     curl -sL -o /tmp/wb_trani.xlsx \\
         "https://docs.google.com/spreadsheets/d/1xF4q8BZvAdc6ESXjZeayulBQDb-J-2cL4gnijRZJumI/export?format=xlsx"
+    # LIBRERIA: idem (i due file vanno condivisi "chiunque con il link").
+    curl -sL -o /tmp/lib_barletta.xlsx \\
+        "https://docs.google.com/spreadsheets/d/13_TWMc7MSWzn-S2wYjHqX8fofZgdyr3J/export?format=xlsx"
+    curl -sL -o /tmp/lib_trani.xlsx \\
+        "https://docs.google.com/spreadsheets/d/1VnKlalJhoPW1avXNnAAehe1XzxDdJ1cH/export?format=xlsx"
 
-    # converti
+    # converti (le sorgenti sono tutte opzionali: indicane almeno una)
     python3 tools/importa_inventari.py \\
-        --barletta /tmp/wb_barletta.xlsx \\
-        --trani    /tmp/wb_trani.xlsx \\
+        --barletta /tmp/wb_barletta.xlsx --trani /tmp/wb_trani.xlsx \\
+        --libreria-barletta /tmp/lib_barletta.xlsx \\
+        --libreria-trani    /tmp/lib_trani.xlsx \\
         --output   /tmp/inventario_per_odoo.csv
 
 Poi: Odoo > Inventario > Beni > tre puntini > Importa records >
 carica /tmp/inventario_per_odoo.csv.
 
 DOPO L'IMPORT:
-    rm /tmp/wb_barletta.xlsx /tmp/wb_trani.xlsx /tmp/inventario_per_odoo.csv
+    rm /tmp/wb_*.xlsx /tmp/lib_*.xlsx /tmp/inventario_per_odoo.csv
 
 Note tecniche:
     - External id deterministici `__import__.bene_<sede>_<NNNN>`, contati
@@ -279,6 +291,100 @@ FOGLI = [
 ]
 
 
+# ---------------------------------------------------------------------
+# Libreria: workbook separati (uno per sede), un foglio per GENERE.
+# Tutti i fogli sono libri/fumetti -> categoria 'libro', col genere preso
+# dal nome del foglio. I prestiti vanno in nota (scelta CDM, niente
+# match nomi -> niente dati personali strutturati).
+# ---------------------------------------------------------------------
+
+GENERE_LIBRERIA = {
+    'ROMANZI, SAGGI': 'Romanzi e saggi',
+    'Edizioni Per Il Club Del Libro': 'Club del Libro',
+    'LIBRI PER BAMBINI, YOUNG ADULT': 'Bambini e Young Adult',
+    'FUMETTI DISNEY': 'Fumetti Disney',
+    'FUMETTI e GRAPHIC NOVEL': 'Fumetti e Graphic Novel',
+    'MANGA, MANHWA': 'Manga e Manhwa',
+    'LE GRANDI BIOGRAFIE - FABBRI ED': 'Biografie',
+    'COLLANE': 'Collane',
+    'VARI': 'Vari',
+    'Libri scolasticidi testo': 'Libri scolastici',
+}
+
+
+def _col(row, *candidati):
+    """Primo valore non vuoto tra header alternativi (match senza spazi,
+    case-insensitive) - i fogli libreria hanno intestazioni leggermente
+    diverse (AUTORE / AUTRICE vs AUTORE/AUTRICE, ecc.)."""
+    chiavi = {c.upper().replace(' ', '') for c in candidati}
+    for hk, v in row.items():
+        if normalizza_testo(hk).upper().replace(' ', '') in chiavi:
+            val = normalizza_testo(v)
+            if val:
+                return val
+    return ''
+
+
+def build_libro(row, genere):
+    titolo = _col(row, 'TITOLO', 'TITOLO / COLLANA')
+    if not titolo:
+        return None
+    mese_anno = _col(row, 'MESE - ANNO')
+    anno = parse_anno(mese_anno)
+    note = []
+    collana = _col(row, 'COLLANA / DETTAGLI / SPECIFICHE', 'DETTAGLI / SPECIFICHE')
+    if collana:
+        note.append(collana)
+    numero = _col(row, 'NUMERO')
+    if numero:
+        note.append(f"Numero: {numero}")
+    if mese_anno and not anno:
+        note.append(f"Periodo: {mese_anno}")
+    # Prestito -> testo in nota (niente crocevia.prestito, scelta CDM).
+    presta = _col(row, 'IN PRESTITO A', 'IN PRESTITO A:')
+    data_p = _col(row, 'DATA', 'DATA:').split(' ')[0]  # togli l'ora se data
+    if presta:
+        note.append(f"In prestito a {presta}" + (f" dal {data_p}" if data_p else ""))
+    return {
+        'name': titolo,
+        'categoria': 'libro',
+        'genere': genere,
+        'autore': _col(row, 'AUTORE / AUTRICE', 'AUTORE/AUTRICE'),
+        'editore': _col(row, 'CASA EDITRICE'),
+        'anno_pubblicazione': anno,
+        'proprietario_id/.id': '',
+        'proprietario_libero': 'Crocevia dei Mondi APS',
+        'note': ' | '.join(note),
+    }
+
+
+def converti_workbook_libreria(path, sede_xid, out_rows, stats):
+    """Itera TUTTI i fogli del workbook libreria (uno per genere)."""
+    wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
+    sede_slug = sede_xid.split('.')[1]
+    idx = 0
+    tot = 0
+    for nome_foglio in wb.sheetnames:
+        genere = GENERE_LIBRERIA.get(nome_foglio, nome_foglio.strip())
+        ws = wb[nome_foglio]
+        n_foglio = 0
+        for row in iter_righe(ws):
+            vals = build_libro(row, genere)
+            if vals is None:
+                continue
+            idx += 1
+            n_foglio += 1
+            # Namespace id distinto dai giochi (bene_<sede>) per non
+            # collidere: bene_lib_<sede>.
+            vals['id'] = f"__import__.bene_lib_{sede_slug}_{idx:04d}"
+            vals['sede_id/id'] = sede_xid
+            out_rows.append(vals)
+        stats['per_foglio'].append((sede_slug + ' [lib]', genere, n_foglio))
+        tot += n_foglio
+    wb.close()
+    return tot
+
+
 def iter_righe(ws):
     """Yield dict {header: valore} per ogni riga dati del foglio."""
     header = None
@@ -327,31 +433,48 @@ def main():
         description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    p.add_argument('--barletta', required=True, help='xlsx workbook Barletta')
-    p.add_argument('--trani', required=True, help='xlsx workbook Trani')
+    # Giochi (workbook con fogli GDT/GDR/Attrezzature/Oggettistica).
+    p.add_argument('--barletta', help='xlsx workbook GIOCHI Barletta')
+    p.add_argument('--trani', help='xlsx workbook GIOCHI Trani')
+    # Libreria (workbook con un foglio per genere).
+    p.add_argument('--libreria-barletta', dest='lib_barletta',
+                   help='xlsx workbook LIBRERIA Barletta')
+    p.add_argument('--libreria-trani', dest='lib_trani',
+                   help='xlsx workbook LIBRERIA Trani')
     p.add_argument('--output', required=True, help='CSV unico per Odoo')
     args = p.parse_args()
+
+    if not any([args.barletta, args.trani, args.lib_barletta, args.lib_trani]):
+        p.error("indica almeno una sorgente (--barletta/--trani e/o "
+                "--libreria-barletta/--libreria-trani)")
 
     import csv
     out_rows = []
     stats = {'per_foglio': [], 'fogli_mancanti': []}
-    n_btl = converti_workbook(
-        args.barletta, 'crocevia_inventario.sede_barletta', out_rows, stats)
-    n_tra = converti_workbook(
-        args.trani, 'crocevia_inventario.sede_trani', out_rows, stats)
+    if args.barletta:
+        converti_workbook(args.barletta, 'crocevia_inventario.sede_barletta',
+                          out_rows, stats)
+    if args.trani:
+        converti_workbook(args.trani, 'crocevia_inventario.sede_trani',
+                          out_rows, stats)
+    if args.lib_barletta:
+        converti_workbook_libreria(
+            args.lib_barletta, 'crocevia_inventario.sede_barletta', out_rows, stats)
+    if args.lib_trani:
+        converti_workbook_libreria(
+            args.lib_trani, 'crocevia_inventario.sede_trani', out_rows, stats)
 
     fieldnames = [
-        'id', 'name', 'categoria', 'sede_id/id',
+        'id', 'name', 'categoria', 'genere', 'sede_id/id',
         'autore', 'editore', 'anno_pubblicazione',
         'proprietario_id/.id', 'proprietario_libero', 'note',
     ]
     with open(args.output, 'w', encoding='utf-8', newline='') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames, restval='')
         writer.writeheader()
         writer.writerows(out_rows)
 
     print(f"OK: scritte {len(out_rows)} righe in {args.output}")
-    print(f"    Barletta: {n_btl} beni  |  Trani: {n_tra} beni")
     print("    Dettaglio per foglio:")
     for sede, foglio, n in stats['per_foglio']:
         print(f"      {sede:18s} {foglio:14s} {n:4d}")

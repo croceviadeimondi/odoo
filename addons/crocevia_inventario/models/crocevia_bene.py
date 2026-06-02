@@ -38,6 +38,12 @@ class CroceviaBene(models.Model):
         copy=False,
         help="Codice univoco per etichette/inventario (es. BTL-001).",
     )
+    genere = fields.Char(
+        string="Genere",
+        index=True,
+        help="Genere/collana del libro (es. Romanzi, Fumetti, Manga, "
+             "Biografie). Utile per filtrare e raggruppare la libreria.",
+    )
     autore = fields.Char(string="Autore")
     editore = fields.Char(string="Editore")
     anno_pubblicazione = fields.Integer(string="Anno pubblicazione")
