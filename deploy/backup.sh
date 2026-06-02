@@ -125,7 +125,8 @@ fi
 # 5c. Notifica nella chat interna di Odoo (Discuss), come OdooBot.
 if [[ -n "$ODOO_CHAT_CHANNEL" ]]; then
     log "Notifica chat Odoo (canale '$ODOO_CHAT_CHANNEL')..."
-    MSG="<b>Backup gestionale</b><br/>Archivio: $(basename "$ARCHIVE")<br/>Dimensione: $SIZE_H<br/>Conservo gli ultimi $RETENTION_DAYS giorni."
+    # Messaggio volutamente conciso: una riga, niente rumore.
+    MSG="Backup gestionale ok: $SIZE_H ($(basename "$ARCHIVE"))"
     if docker exec -i -e CHAT_CHANNEL="$ODOO_CHAT_CHANNEL" -e CHAT_MSG="$MSG" "$ODOO_CONTAINER" \
         sh -c "odoo shell -d $DB_NAME --no-http --db_host=\$HOST --db_user=\$USER --db_password=\$PASSWORD --db_port=5432 --shell-interface=python" \
         < "$SCRIPT_DIR/notifica_chat_odoo.py" >/dev/null 2>&1; then
