@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-    <!-- Menu root "Registro Volontari": e' un atto formale separato dal
-         libro volontari operativo (crocevia_volontariato), quindi
-         menu root a se' invece di sotto-voce di Volontariato. -->
+    <!-- "Registro Volontari": il registro legale write-once. Annidato
+         come voce sotto il root "Volontariato" (creato da
+         crocevia_navigazione), accanto a Libro volontari e Ore prestate. -->
     <menuitem id="menu_registro_volontari_root"
               name="Registro Volontari"
-              sequence="55"/>
+              parent="crocevia_navigazione.menu_volontariato_root"
+              sequence="30"/>
 
     <menuitem id="menu_registro_iscrizioni"
               name="Iscrizioni"
