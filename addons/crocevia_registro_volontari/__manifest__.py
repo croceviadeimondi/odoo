@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Registro Volontari",
-    'version': '18.0.1.2.0',
+    'version': '18.0.1.2.1',
     'summary': "Registro volontari ETS conforme DM 6 ottobre 2021: "
                "inalterabilita', hash chain, vidimazione digitale",
     'description': """

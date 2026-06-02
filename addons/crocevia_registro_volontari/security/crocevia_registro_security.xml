@@ -34,11 +34,11 @@
             <field name="implied_ids" eval="[(4, ref('group_registro_iscrizione'))]"/>
         </record>
 
-        <!-- Aggancio al ruolo unificato del direttivo: chi e' direttivo
-             ha automaticamente lettura + gestione iscrizioni. Il ruolo
-             "responsabile vidimazione" va invece assegnato manualmente
-             (e' un ruolo piu' ristretto, presidente + segretario). -->
-        <record id="crocevia_ruoli.group_crocevia_direttivo_master" model="res.groups">
+        <!-- Aggancio al ruolo Amministrazione: chi e' in Amministrazione
+             (e quindi anche il Direttivo, che la eredita) ha lettura +
+             gestione iscrizioni del registro. Il ruolo "responsabile
+             vidimazione" va assegnato a mano (presidente + segretario). -->
+        <record id="crocevia_ruoli.group_crocevia_amministrazione" model="res.groups">
             <field name="implied_ids" eval="[(4, ref('group_registro_iscrizione'))]"/>
         </record>
     </data>

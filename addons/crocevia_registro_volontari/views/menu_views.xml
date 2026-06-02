@@ -7,6 +7,7 @@
     <menuitem id="menu_registro_volontari_root"
               name="Registro Volontari"
               parent="crocevia_navigazione.menu_volontariato_root"
+              groups="crocevia_ruoli.group_crocevia_amministrazione"
               sequence="30"/>
 
     <menuitem id="menu_registro_iscrizioni"
