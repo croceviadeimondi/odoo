@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Registro Volontari",
-    'version': '18.0.1.1.0',
+    'version': '18.0.1.2.0',
     'summary': "Registro volontari ETS conforme DM 6 ottobre 2021: "
                "inalterabilita', hash chain, vidimazione digitale",
     'description': """
@@ -45,6 +45,8 @@ aggiornamento trust roots.
         'mail',
         'contacts',
         'crocevia_ruoli',
+        # Per annidare il menu sotto il root "Volontariato" di navigazione.
+        'crocevia_navigazione',
     ],
     'external_dependencies': {
         'python': ['weasyprint'],

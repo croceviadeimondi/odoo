@@ -119,7 +119,14 @@
         <field name="name">res.partner.socio.list</field>
         <field name="model">res.partner</field>
         <field name="arch" type="xml">
-            <list string="Soci">
+            <list string="Libro soci">
+                <header>
+                    <!-- "Unifica soci duplicati" come pulsante nel Libro soci
+                         (sostituisce il vecchio sottomenu). Apre il wizard
+                         nativo di merge con i guardrail CDM. -->
+                    <button name="%(action_unifica_soci)d" type="action"
+                            string="Unifica duplicati"/>
+                </header>
                 <field name="numero_socio"/>
                 <field name="name"/>
                 <field name="categoria_socio"/>
@@ -245,9 +252,9 @@
         </field>
     </record>
 
-    <!-- Azione "Soci" filtrata su is_socio=True -->
+    <!-- Azione "Libro soci" filtrata su is_socio=True -->
     <record id="action_soci" model="ir.actions.act_window">
-        <field name="name">Soci</field>
+        <field name="name">Libro soci</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">list,kanban,form</field>
         <field name="domain">[('is_socio', '=', True)]</field>
