@@ -309,6 +309,10 @@ GENERE_LIBRERIA = {
     'COLLANE': 'Collane',
     'VARI': 'Vari',
     'Libri scolasticidi testo': 'Libri scolastici',
+    # Fogli specifici di Trani
+    'FUMETTI': 'Fumetti e Graphic Novel',
+    'Libri sul disegno': 'Libri sul disegno',
+    'La mia enciclopedia': 'Enciclopedie',
 }
 
 
