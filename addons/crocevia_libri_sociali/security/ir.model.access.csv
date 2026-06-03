@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_libro_vidimazione_amm,crocevia.libro.vidimazione amministrazione,model_crocevia_libro_vidimazione,crocevia_ruoli.group_crocevia_amministrazione,1,1,1,1

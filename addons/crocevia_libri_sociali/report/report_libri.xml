@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="action_report_libro_soci" model="ir.actions.report">
+        <field name="name">Libro soci (snapshot)</field>
+        <field name="model">crocevia.libro.vidimazione</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crocevia_libri_sociali.report_libro_soci</field>
+        <field name="report_file">crocevia_libri_sociali.report_libro_soci</field>
+    </record>
+
+    <record id="action_report_libro_verbali" model="ir.actions.report">
+        <field name="name">Libro verbali (snapshot)</field>
+        <field name="model">crocevia.libro.vidimazione</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">crocevia_libri_sociali.report_libro_verbali</field>
+        <field name="report_file">crocevia_libri_sociali.report_libro_verbali</field>
+    </record>
+
+    <template id="report_libro_soci">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>Libro degli associati</h2>
+                        <p>Crocevia dei Mondi APS - snapshot del
+                            <strong t-out="doc.data_snapshot" t-options="{'widget': 'datetime'}"/>
+                        </p>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr>
+                                    <th>N.</th><th>Nome</th><th>Codice fiscale</th>
+                                    <th>Categoria</th><th>Iscrizione</th><th>Cessazione</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc._records_snapshot()" t-as="s">
+                                    <td t-out="s.numero_socio"/>
+                                    <td t-out="s.name"/>
+                                    <td t-out="s.codice_fiscale"/>
+                                    <td t-out="s.categoria_socio"/>
+                                    <td t-out="s.data_iscrizione" t-options="{'widget': 'date'}"/>
+                                    <td t-out="s.data_cessazione" t-options="{'widget': 'date'}"/>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="text-muted">Totale soci: <span t-out="doc.record_count"/>.</p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+    <template id="report_libro_verbali">
+        <t t-call="web.html_container">
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.external_layout">
+                    <div class="page">
+                        <h2>
+                            <t t-if="doc.tipo_libro == 'verbali_assemblea'">Libro verbali delle assemblee</t>
+                            <t t-else="">Libro verbali del direttivo</t>
+                        </h2>
+                        <p>Crocevia dei Mondi APS - snapshot del
+                            <strong t-out="doc.data_snapshot" t-options="{'widget': 'datetime'}"/>
+                        </p>
+                        <table class="table table-sm o_main_table">
+                            <thead>
+                                <tr><th>Data</th><th>Oggetto</th><th>Sintesi</th><th>Documento</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr t-foreach="doc._records_snapshot()" t-as="v">
+                                    <td t-out="v.data" t-options="{'widget': 'date'}"/>
+                                    <td t-out="v.name"/>
+                                    <td t-out="v.note"/>
+                                    <td><t t-if="v.documento">allegato</t><t t-else="">-</t></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="text-muted">Totale verbali: <span t-out="doc.record_count"/>.</p>
+                    </div>
+                </t>
+            </t>
+        </t>
+    </template>
+
+</odoo>
