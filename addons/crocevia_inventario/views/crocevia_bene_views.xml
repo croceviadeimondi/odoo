@@ -6,10 +6,16 @@
         <field name="model">crocevia.bene</field>
         <field name="arch" type="xml">
             <list decoration-muted="not active"
-                  decoration-warning="in_prestito">
+                  decoration-danger="mancante"
+                  decoration-warning="in_prestito and not mancante">
+                <field name="mancante" column_invisible="1"/>
                 <field name="codice_interno" optional="show"/>
                 <field name="name"/>
                 <field name="categoria" widget="badge"/>
+                <field name="stato_bene" widget="badge"
+                       decoration-success="stato_bene == 'disponibile'"
+                       decoration-warning="stato_bene == 'in_prestito'"
+                       decoration-danger="stato_bene == 'mancante'"/>
                 <field name="genere_ids" widget="many2many_tags" optional="show"/>
                 <field name="sistema_id" optional="show"/>
                 <field name="sede_id"/>
@@ -42,14 +48,24 @@
                             string="Restituito"
                             invisible="not in_prestito"
                             confirm="Confermi la restituzione del bene? La data di restituzione sara' impostata a oggi."/>
+                    <button name="action_segnala_mancante" type="object"
+                            string="Segnala mancante" class="btn-warning"
+                            invisible="mancante or not active"/>
+                    <button name="action_segna_disponibile" type="object"
+                            string="Segna disponibile"
+                            invisible="not mancante"/>
                     <field name="in_prestito" widget="statusbar"
                            options="{'clickable': '0'}"
                            invisible="1"/>
+                    <field name="mancante" invisible="1"/>
                 </header>
                 <sheet>
+                    <widget name="web_ribbon" title="Mancante"
+                            bg_color="text-bg-danger"
+                            invisible="not mancante"/>
                     <widget name="web_ribbon" title="In prestito"
                             bg_color="text-bg-warning"
-                            invisible="not in_prestito"/>
+                            invisible="mancante or not in_prestito"/>
                     <widget name="web_ribbon" title="Archiviato"
                             bg_color="text-bg-danger"
                             invisible="active"/>
@@ -93,7 +109,11 @@
                             <field name="currency_id" invisible="1"/>
                         </group>
                     </group>
-                    <group>
+                    <group string="Mancanza" invisible="not mancante">
+                        <field name="nota_mancanza" nolabel="1"
+                               placeholder="Dettagli sulla mancanza: dove dovrebbe essere, chi l'ha cercato, da quando manca..."/>
+                    </group>
+                    <group string="Note">
                         <field name="note" nolabel="1"/>
                     </group>
                     <notebook>
@@ -133,10 +153,12 @@
                 <field name="categoria"/>
                 <field name="proprietario_id"/>
                 <field name="proprietario_libero"/>
+                <filter string="Mancanti" name="filter_mancanti"
+                        domain="[('mancante', '=', True)]"/>
                 <filter string="In prestito" name="filter_in_prestito"
                         domain="[('in_prestito', '=', True)]"/>
                 <filter string="Disponibili" name="filter_disponibili"
-                        domain="[('in_prestito', '=', False)]"/>
+                        domain="[('mancante', '=', False), ('in_prestito', '=', False)]"/>
                 <separator/>
                 <filter string="Giochi" name="filter_giochi"
                         domain="[('categoria', 'in', ['gioco_da_tavolo', 'gioco_di_ruolo'])]"/>
@@ -159,8 +181,8 @@
                     <filter string="Sistema (giochi di ruolo)" name="group_sistema"
                             domain="[('categoria', '=', 'gioco_di_ruolo')]"
                             context="{'group_by': 'sistema_id'}"/>
-                    <filter string="Stato prestito" name="group_prestito"
-                            context="{'group_by': 'in_prestito'}"/>
+                    <filter string="Stato" name="group_stato"
+                            context="{'group_by': 'stato_bene'}"/>
                 </group>
             </search>
         </field>

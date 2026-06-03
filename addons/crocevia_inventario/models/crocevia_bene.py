@@ -62,6 +62,31 @@ class CroceviaBene(models.Model):
     note = fields.Text(string="Note")
     active = fields.Boolean(default=True)
 
+    # ----------------- segnalazione bene mancante -----------------
+    mancante = fields.Boolean(
+        string="Mancante",
+        default=False,
+        tracking=True,
+        help="Segnala che il bene risulta mancante / non reperibile.",
+    )
+    nota_mancanza = fields.Text(
+        string="Nota sulla mancanza",
+        help="Dettagli sulla mancanza (dove dovrebbe essere, chi l'ha "
+             "cercato, ecc.).",
+    )
+    stato_bene = fields.Selection(
+        selection=[
+            ('disponibile', 'Disponibile'),
+            ('in_prestito', 'In prestito'),
+            ('mancante', 'Mancante'),
+        ],
+        string="Stato",
+        compute='_compute_stato_bene',
+        store=True,
+        help="Mancante (segnalato) ha priorita'; poi In prestito (prestito "
+             "aperto); altrimenti Disponibile.",
+    )
+
     proprietario_id = fields.Many2one(
         'res.partner',
         string="Proprietario",
@@ -146,6 +171,28 @@ class CroceviaBene(models.Model):
         self.ensure_one()
         if self.prestito_corrente_id:
             self.prestito_corrente_id.action_restituisci()
+
+    # ----------------- segnalazione bene mancante -----------------
+
+    @api.depends('mancante', 'in_prestito')
+    def _compute_stato_bene(self):
+        for bene in self:
+            if bene.mancante:
+                bene.stato_bene = 'mancante'
+            elif bene.in_prestito:
+                bene.stato_bene = 'in_prestito'
+            else:
+                bene.stato_bene = 'disponibile'
+
+    def action_segnala_mancante(self):
+        for bene in self:
+            bene.mancante = True
+            bene.message_post(body=_("Segnalato come MANCANTE."))
+
+    def action_segna_disponibile(self):
+        for bene in self:
+            bene.mancante = False
+            bene.message_post(body=_("Segnalato di nuovo come disponibile."))
 
 
 class CroceviaBeneGenere(models.Model):
