@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Registro Volontari - Crocevia dei Mondi APS</title>
+<style>
+  :root{
+    --viola:#714B67; --viola-chiaro:#f3eef2; --giallo:#fff3cd; --giallo-bordo:#ffe69c;
+    --verde:#e8f5e9; --grigio:#5f6b76; --bordo:#e3e3e3; --testo:#2b2b2b;
+  }
+  *{box-sizing:border-box}
+  body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    color:var(--testo); line-height:1.6; margin:0; background:#fafafa;}
+  .wrap{max-width:880px; margin:0 auto; padding:32px 20px 64px;}
+  header.hero{background:var(--viola); color:#fff; padding:40px 20px;}
+  header.hero .wrap{padding-top:0;padding-bottom:0}
+  header.hero h1{margin:0 0 6px; font-size:2rem;}
+  header.hero p{margin:0; opacity:.9;}
+  h2{color:var(--viola); border-bottom:2px solid var(--viola-chiaro);
+    padding-bottom:6px; margin-top:48px;}
+  h3{color:#3a2b36; margin-top:28px;}
+  .tag{display:inline-block; font-size:.72rem; font-weight:700; letter-spacing:.04em;
+    text-transform:uppercase; padding:3px 10px; border-radius:999px; margin-right:6px;}
+  .tag.nontec{background:#e8f5e9; color:#2e7d32;}
+  .tag.tec{background:#e3f2fd; color:#1565c0;}
+  .callout{border-radius:10px; padding:16px 18px; margin:18px 0;}
+  .callout.pratica{background:var(--viola-chiaro); border:1px solid #e0d4dd;}
+  .callout.legge{background:var(--giallo); border:1px solid var(--giallo-bordo);}
+  .callout.ok{background:var(--verde); border:1px solid #c8e6c9;}
+  .passi{counter-reset:step; list-style:none; padding:0;}
+  .passi li{position:relative; padding:14px 16px 14px 58px; margin:10px 0;
+    background:#fff; border:1px solid var(--bordo); border-radius:10px;}
+  .passi li::before{counter-increment:step; content:counter(step);
+    position:absolute; left:14px; top:14px; width:30px; height:30px;
+    background:var(--viola); color:#fff; border-radius:50%; text-align:center;
+    line-height:30px; font-weight:700;}
+  table{width:100%; border-collapse:collapse; margin:16px 0; background:#fff;}
+  th,td{border:1px solid var(--bordo); padding:9px 12px; text-align:left; vertical-align:top;}
+  th{background:var(--viola-chiaro);}
+  code{background:#f0f0f3; padding:2px 6px; border-radius:5px; font-size:.9em;}
+  .small{color:var(--grigio); font-size:.92rem;}
+  .glossario dt{font-weight:700; margin-top:12px; color:#3a2b36;}
+  .glossario dd{margin:2px 0 0; color:var(--grigio);}
+  footer{margin-top:56px; padding-top:16px; border-top:1px solid var(--bordo);
+    color:var(--grigio); font-size:.88rem;}
+  @media print{body{background:#fff} header.hero{background:#fff;color:#000;border-bottom:3px solid var(--viola)} a{color:#000}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <h1>Il Registro dei Volontari</h1>
+    <p>Come il gestionale del Crocevia dei Mondi APS tiene il libro dei volontari a norma di legge</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <p class="small">Documento di presentazione del modulo <em>Registro Volontari</em>.
+  La prima parte e' per tutti; la seconda, tecnica, e' per chi vuole capire "sotto il cofano".</p>
+
+  <!-- ================= PARTE NON TECNICA ================= -->
+  <h2><span class="tag nontec">Per tutti</span> A cosa serve</h2>
+
+  <p>Le APS iscritte al RUNTS devono tenere un <strong>registro dei volontari</strong>
+  (quelli non occasionali) e conservarlo in modo che <strong>non sia
+  modificabile a posteriori</strong>. Lo dice la legge: <strong>D.M. 6 ottobre
+  2021</strong> e <strong>art. 2215-bis del Codice Civile</strong> (libri tenuti
+  con strumenti informatici).</p>
+
+  <p>In pratica servono tre garanzie:</p>
+  <ul>
+    <li><strong>Inalterabilita'</strong>: una volta registrato e "vidimato", un
+    volontario non si puo' piu' cambiare o cancellare di nascosto.</li>
+    <li><strong>Data certa</strong>: si deve poter dimostrare <em>quando</em> il
+    registro e' stato chiuso.</li>
+    <li><strong>Vidimazione periodica</strong>: il registro va "sigillato"
+    almeno una volta l'anno con una firma digitale e una marca temporale.</li>
+  </ul>
+
+  <p>Questo modulo fa tutto questo dentro Odoo, automaticamente.</p>
+
+  <h2><span class="tag nontec">Per tutti</span> Come si usa, in 4 passi</h2>
+
+  <ol class="passi">
+    <li><strong>Si iscrive il volontario.</strong> Si inseriscono i suoi dati.
+    Finche' il registro non e' "sigillato", la scheda e' ancora correggibile
+    (ogni modifica resta tracciata).</li>
+    <li><strong>Si genera lo "scatto" del registro.</strong> Con un clic il
+    sistema crea un PDF che fotografa lo stato attuale del registro.</li>
+    <li><strong>Si firma il PDF.</strong> Il responsabile (es. presidente o
+    segretario) firma il PDF con la propria <em>firma digitale qualificata</em>
+    e ci applica una <em>marca temporale</em>, usando il suo programma di firma
+    (ArubaSign, GoSign, Dike...). Poi lo ricarica nel gestionale.</li>
+    <li><strong>Il sistema verifica e sigilla.</strong> Odoo controlla che la
+    firma e la marca temporale siano valide; se lo sono, "congela" tutte le
+    schede di quel momento: <strong>da li' in poi sono immutabili</strong>.</li>
+  </ol>
+
+  <div class="callout legge">
+    <strong>Promemoria automatico.</strong> Il sistema ricorda da solo quando si
+    avvicinano i 12 mesi dall'ultima vidimazione e avvisa (banner giallo) che e'
+    ora di ri-sigillare il registro prima di iscrivere nuovi volontari.
+  </div>
+
+  <h2><span class="tag nontec">Per tutti</span> Quali garanzie offre</h2>
+  <div class="callout ok">
+    <ul style="margin:0">
+      <li><strong>Niente trucchi:</strong> se qualcuno modificasse il database a
+      mano, il sistema se ne accorge (l'integrita' e' protetta da una "catena di
+      sigilli" digitale).</li>
+      <li><strong>Prova legale:</strong> firma qualificata + marca temporale
+      danno valore probatorio alla chiusura del registro.</li>
+      <li><strong>Tracciabilita':</strong> ogni modifica fatta prima della
+      vidimazione resta scritta nello storico (chi e quando).</li>
+      <li><strong>Niente cancellazioni:</strong> un'iscrizione non si elimina,
+      al massimo si "annulla" con motivazione, lasciando traccia.</li>
+    </ul>
+  </div>
+
+  <!-- ================= PARTE TECNICA ================= -->
+  <h2><span class="tag tec">Tecnico</span> Architettura</h2>
+
+  <p>Il modulo <code>crocevia_registro_volontari</code> (Odoo 18) ha due modelli
+  principali:</p>
+  <table>
+    <tr><th>Modello</th><th>Ruolo</th></tr>
+    <tr><td><code>crocevia.registro.iscrizione</code></td>
+        <td>L'iscrizione del singolo volontario nel registro legale. Snapshot
+        anagrafico <em>write-once</em>, numerazione progressiva via
+        <code>ir.sequence</code> (mai riusata).</td></tr>
+    <tr><td><code>crocevia.registro.vidimazione</code></td>
+        <td>L'atto di vidimazione: snapshot PDF, firma esterna, verifica
+        crittografica, chiusura.</td></tr>
+  </table>
+
+  <h3>Catena di integrita' (hash chain)</h3>
+  <p>Ogni record vidimato memorizza l'<strong>hash SHA-256</strong> dei propri
+  dati (<code>hash_record</code>) e l'hash del record precedente
+  (<code>hash_precedente</code>). I record sono cosi' concatenati come una
+  piccola blockchain: modificare un dato cambierebbe il suo hash e
+  spezzerebbe la catena. Il bottone <em>Verifica integrita'</em> ricalcola
+  l'intera catena e segnala il primo punto di rottura.</p>
+
+  <h3>Immutabilita' (write-once)</h3>
+  <p>I modelli ridefiniscono <code>write()</code> e <code>unlink()</code>: sui
+  record in stato <code>vidimato</code> ogni modifica ai campi anagrafici e di
+  hash, e ogni cancellazione, sono <strong>bloccate anche per l'amministratore</strong>.
+  Prima della vidimazione (stato <code>bozza</code>) i record sono invece
+  modificabili e l'audit avviene nel <em>chatter</em>.</p>
+
+  <h3>Snapshot PDF deterministico</h3>
+  <p>Lo snapshot e' un PDF QWeb normalizzato con <code>qpdf</code>
+  (<code>--deterministic-id</code>): lo stesso stato del registro produce sempre
+  lo <strong>stesso file e lo stesso hash</strong>, condizione necessaria per
+  una firma verificabile.</p>
+
+  <h3>Verifica della firma (PAdES + marca temporale) - novita' v2.0</h3>
+  <p>Quando si ricarica il PDF firmato, <code>utils/verifica_pades.py</code> usa
+  <strong>pyHanko</strong> per verificare, in modo crittografico e automatico:</p>
+  <ul>
+    <li><strong>integrita'</strong>: il documento non e' stato modificato dopo la firma;</li>
+    <li><strong>validita'</strong> della firma PAdES;</li>
+    <li><strong>copertura</strong>: la firma copre l'intero documento;</li>
+    <li><strong>marca temporale</strong> RFC 3161 (data certa) e dati del firmatario.</li>
+  </ul>
+  <p>Questi requisiti sono sempre obbligatori. La validazione della catena verso
+  le <strong>CA qualificate</strong> (trust list AgID/EU) e' opzionale
+  (<em>best-effort</em>): si attiva mettendo i certificati in
+  <code>data/trust/</code> e impostando il parametro
+  <code>crocevia_registro_volontari.firma_strict = True</code>. Se la verifica
+  fallisce, la vidimazione va in stato <code>errore</code> e non viene chiusa.</p>
+
+  <h3>Ruoli e accesso</h3>
+  <table>
+    <tr><th>Gruppo</th><th>Puo'</th></tr>
+    <tr><td>Registro - Lettura</td><td>consultare il registro</td></tr>
+    <tr><td>Registro - Gestione iscrizioni</td><td>iscrivere, cessare, annullare</td></tr>
+    <tr><td>Registro - Responsabile vidimazione</td><td>generare snapshot e chiudere la vidimazione (firma)</td></tr>
+  </table>
+  <p class="small">Nel gestionale del Crocevia il menu "Registro Volontari" e'
+  riservato all'Amministrazione (vedi modello permessi a 4 livelli).</p>
+
+  <h3>Affidabilita'</h3>
+  <p>Il modulo ha test automatici (catena di integrita', rilevamento
+  manomissioni, write-once, congelamento, unicita' del codice fiscale,
+  verificatore firma). Il percorso positivo della firma va validato una volta
+  con una firma qualificata reale.</p>
+
+  <!-- ================= GLOSSARIO ================= -->
+  <h2>Glossario (per i non addetti)</h2>
+  <dl class="glossario">
+    <dt>Vidimazione</dt><dd>L'atto di "sigillare" ufficialmente il registro a una certa data.</dd>
+    <dt>Firma elettronica qualificata (FEQ)</dt><dd>La firma digitale con valore legale pieno (quella della smart card / chiavetta / firma remota).</dd>
+    <dt>Marca temporale</dt><dd>Un "timbro" digitale che certifica <em>quando</em> un documento e' stato firmato.</dd>
+    <dt>Hash (SHA-256)</dt><dd>Un'"impronta digitale" di un dato: se il dato cambia anche di una virgola, l'impronta cambia del tutto.</dd>
+    <dt>PAdES</dt><dd>Lo standard tecnico delle firme digitali dentro i file PDF.</dd>
+    <dt>Trust list / CA qualificate</dt><dd>L'elenco ufficiale (AgID/UE) dei soggetti autorizzati a emettere firme qualificate.</dd>
+  </dl>
+
+  <footer>
+    Crocevia dei Mondi APS - documento interno di presentazione del modulo
+    Registro Volontari. Aprilo nel browser; per condividerlo puoi stamparlo in
+    PDF (Ctrl/Cmd + P) o aprirlo con Word.
+  </footer>
+
+</div>
+</body>
+</html>
