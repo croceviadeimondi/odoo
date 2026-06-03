@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_libro_vidimazione_list" model="ir.ui.view">
+        <field name="name">crocevia.libro.vidimazione.list</field>
+        <field name="model">crocevia.libro.vidimazione</field>
+        <field name="arch" type="xml">
+            <list decoration-success="stato == 'firmato_verificato'"
+                  decoration-danger="stato == 'errore'"
+                  decoration-info="stato in ('bozza','pdf_generato')">
+                <field name="data_snapshot"/>
+                <field name="tipo_libro"/>
+                <field name="record_count"/>
+                <field name="firmatario_nome"/>
+                <field name="marca_temporale_data"/>
+                <field name="stato" widget="badge"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_libro_vidimazione_form" model="ir.ui.view">
+        <field name="name">crocevia.libro.vidimazione.form</field>
+        <field name="model">crocevia.libro.vidimazione</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_genera_snapshot" type="object"
+                            string="Genera snapshot" class="oe_highlight"
+                            invisible="stato != 'bozza'"/>
+                    <button name="action_verifica_firma" type="object"
+                            string="Verifica firma" class="oe_highlight"
+                            invisible="stato not in ('pdf_generato','errore')"/>
+                    <field name="stato" widget="statusbar"
+                           statusbar_visible="bozza,pdf_generato,firmato_verificato"/>
+                </header>
+                <sheet>
+                    <widget name="web_ribbon" title="Vidimato"
+                            bg_color="text-bg-success"
+                            invisible="stato != 'firmato_verificato'"/>
+                    <widget name="web_ribbon" title="Errore firma"
+                            bg_color="text-bg-danger"
+                            invisible="stato != 'errore'"/>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group string="Snapshot">
+                            <field name="tipo_libro" readonly="1"/>
+                            <field name="data_snapshot"/>
+                            <field name="record_count"/>
+                            <field name="pdf_unsigned" filename="pdf_unsigned_filename"
+                                   invisible="stato == 'bozza'"/>
+                            <field name="pdf_unsigned_filename" invisible="1"/>
+                            <field name="pdf_unsigned_hash" invisible="stato == 'bozza'"/>
+                            <field name="responsabile_id"/>
+                        </group>
+                        <group string="Firma esterna" invisible="stato == 'bozza'">
+                            <field name="pdf_signed" filename="pdf_signed_filename"
+                                   readonly="stato == 'firmato_verificato'"/>
+                            <field name="pdf_signed_filename" invisible="1"/>
+                            <field name="firma_valida" readonly="1"/>
+                            <field name="firmatario_nome" readonly="1"/>
+                            <field name="firmatario_cf" readonly="1"/>
+                            <field name="marca_temporale_data" readonly="1"/>
+                            <field name="tsa_provider" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Dettagli verifica" invisible="not firma_dettagli">
+                        <field name="firma_dettagli" nolabel="1" readonly="1"/>
+                    </group>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_vidimazione_soci" model="ir.actions.act_window">
+        <field name="name">Vidimazioni libro soci</field>
+        <field name="res_model">crocevia.libro.vidimazione</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('tipo_libro', '=', 'soci')]</field>
+        <field name="context">{'default_tipo_libro': 'soci'}</field>
+    </record>
+
+    <record id="action_vidimazione_verbali_assemblea" model="ir.actions.act_window">
+        <field name="name">Vidimazioni verbali assemblee</field>
+        <field name="res_model">crocevia.libro.vidimazione</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('tipo_libro', '=', 'verbali_assemblea')]</field>
+        <field name="context">{'default_tipo_libro': 'verbali_assemblea'}</field>
+    </record>
+
+    <record id="action_vidimazione_verbali_direttivo" model="ir.actions.act_window">
+        <field name="name">Vidimazioni verbali direttivo</field>
+        <field name="res_model">crocevia.libro.vidimazione</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('tipo_libro', '=', 'verbali_direttivo')]</field>
+        <field name="context">{'default_tipo_libro': 'verbali_direttivo'}</field>
+    </record>
+
+</odoo>

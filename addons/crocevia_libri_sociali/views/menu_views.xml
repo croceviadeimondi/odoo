@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <menuitem id="menu_vidimazione_soci"
+              name="Vidimazione libro soci"
+              parent="crocevia_navigazione.menu_soci_root"
+              action="action_vidimazione_soci"
+              groups="crocevia_ruoli.group_crocevia_amministrazione"
+              sequence="50"/>
+
+    <menuitem id="menu_vidimazione_verbali_assemblea"
+              name="Vidimazione verbali assemblee"
+              parent="crocevia_navigazione.menu_atti_root"
+              action="action_vidimazione_verbali_assemblea"
+              groups="crocevia_ruoli.group_crocevia_amministrazione"
+              sequence="50"/>
+
+    <menuitem id="menu_vidimazione_verbali_direttivo"
+              name="Vidimazione verbali direttivo"
+              parent="crocevia_navigazione.menu_atti_root"
+              action="action_vidimazione_verbali_direttivo"
+              groups="crocevia_ruoli.group_crocevia_amministrazione"
+              sequence="60"/>
+
+</odoo>
