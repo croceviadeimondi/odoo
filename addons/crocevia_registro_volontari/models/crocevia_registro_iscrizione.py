@@ -199,7 +199,39 @@ class CroceviaRegistroIscrizione(models.Model):
              "legge (DM 6/10/2021).",
     )
 
+    # Avviso (banner) sullo stato di vidimazione del registro: non stored,
+    # uguale per tutti i record, usato per mostrare un alert giallo nelle viste.
+    avviso_vidimazione = fields.Char(
+        string="Avviso vidimazione",
+        compute='_compute_avviso_vidimazione',
+    )
+
     # ----------------- computed -----------------
+
+    @api.depends_context('uid')
+    def _compute_avviso_vidimazione(self):
+        from datetime import timedelta
+        Vid = self.env['crocevia.registro.vidimazione']
+        ultima = Vid.search(
+            [('stato', '=', 'firmato_verificato')],
+            order='marca_temporale_data desc', limit=1)
+        avviso = False
+        if not ultima or not ultima.marca_temporale_data:
+            if self.env['crocevia.registro.iscrizione'].search_count([]):
+                avviso = ("Registro mai vidimato: vidimare al piu' presto "
+                          "(firma + marca temporale, art. 2215-bis cc).")
+        else:
+            eta = fields.Datetime.now() - ultima.marca_temporale_data
+            if eta > timedelta(days=365):
+                avviso = ("Vidimazione SCADUTA (ultima del %s, >12 mesi fa): "
+                          "rividimare prima di registrare nuovi volontari."
+                          % ultima.marca_temporale_data.strftime('%d/%m/%Y'))
+            elif eta > timedelta(days=305):
+                avviso = ("Vidimazione in scadenza (ultima del %s): "
+                          "pianificare la prossima entro i 12 mesi."
+                          % ultima.marca_temporale_data.strftime('%d/%m/%Y'))
+        for r in self:
+            r.avviso_vidimazione = avviso
 
     @api.depends('annullamento_id', 'data_fine_attivita')
     def _compute_stato(self):
