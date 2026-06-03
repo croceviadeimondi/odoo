@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- noupdate=1: il testo si modifica da Impostazioni > Parametri di
+         sistema (chiave crocevia_gdpr.informativa_html) senza che un
+         aggiornamento del modulo lo sovrascriva. Questo e' un SEGNAPOSTO:
+         sostituirlo con l'informativa privacy reale dell'APS. -->
+    <data noupdate="1">
+        <record id="param_gdpr_informativa" model="ir.config_parameter">
+            <field name="key">crocevia_gdpr.informativa_html</field>
+            <field name="value"><![CDATA[
+<p><strong>Informativa sul trattamento dei dati personali (placeholder).</strong></p>
+<p>Crocevia dei Mondi APS tratta i dati personali inseriti in questo
+gestionale (anagrafiche soci e volontari, contatti, attivita') nel rispetto
+del Regolamento (UE) 2016/679 (GDPR) e del D.Lgs. 196/2003, esclusivamente
+per le finalita' gestionali e istituzionali dell'associazione.</p>
+<p>Accedendo al gestionale ti impegni a trattare i dati a cui hai accesso
+con riservatezza, a non divulgarli a terzi e a usarli solo per le attivita'
+dell'associazione.</p>
+<p><em>Questo e' un testo segnaposto: il direttivo deve sostituirlo con
+l'informativa privacy definitiva (Impostazioni &gt; Tecnico &gt; Parametri
+di sistema &gt; crocevia_gdpr.informativa_html).</em></p>
+            ]]></field>
+        </record>
+    </data>
+</odoo>
