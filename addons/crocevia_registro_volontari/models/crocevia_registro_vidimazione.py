@@ -21,13 +21,20 @@ effettivamente firmato e marcato. La traccia formale resta:
 - chatter = audit log
 """
 
+import base64
+import glob
 import hashlib
 import logging
+import os
 
 from odoo import api, fields, models, _
 from odoo.exceptions import UserError
 
+from ..utils.verifica_pades import verifica_pdf_firmato
+
 _logger = logging.getLogger(__name__)
+
+PARAM_STRICT = 'crocevia_registro_volontari.firma_strict'
 
 
 STATO_SELECTION = [
@@ -205,58 +212,84 @@ class CroceviaRegistroVidimazione(models.Model):
             )
             return pdf_bytes
 
-    def action_verifica_firma(self):
-        """v1.0: verifica MANUALE. Il responsabile compila a mano i
-        campi firma_valida, marca_temporale_data, firmatario_nome,
-        tsa_provider e poi clicca questo bottone per chiudere il
-        workflow.
+    def _carica_trust_roots(self):
+        """Carica i certificati CA (PEM/CRT) da data/trust/ del modulo, se
+        presenti, per la validazione della catena verso le CA qualificate.
+        Lista vuota se nessuno -> verifica solo integrita'+marca temporale."""
+        roots = []
+        try:
+            from asn1crypto import pem, x509
+            base = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), 'data', 'trust')
+            for path in sorted(glob.glob(os.path.join(base, '*.pem'))
+                               + glob.glob(os.path.join(base, '*.crt'))):
+                with open(path, 'rb') as f:
+                    data = f.read()
+                if pem.detect(data):
+                    for _t, _h, der in pem.unarmor(data, multiple=True):
+                        roots.append(x509.Certificate.load(der))
+                else:
+                    roots.append(x509.Certificate.load(data))
+        except Exception as e:  # noqa: BLE001
+            _logger.warning("Trust roots non caricati: %s", e)
+        return roots
 
-        v2.0 (futuro): chiamata pyHanko + bundle CA AgID."""
+    def action_verifica_firma(self):
+        """v2.0: verifica CRITTOGRAFICA reale via pyHanko (integrita', firma
+        PAdES, copertura, marca temporale RFC 3161; catena CA qualificate
+        best-effort). Se valida congela i record bozza e chiude; altrimenti
+        stato 'errore' con i dettagli."""
         self.ensure_one()
-        if self.stato != 'pdf_generato':
+        if self.stato not in ('pdf_generato', 'errore'):
             raise UserError(_(
                 "La verifica firma e' ammessa solo dopo la generazione "
-                "dello snapshot."
-            ))
+                "dello snapshot."))
         if not self.pdf_signed:
+            raise UserError(_("Carica prima il PDF firmato esternamente."))
+
+        pdf_bytes = base64.b64decode(self.pdf_signed)
+        strict = self.env['ir.config_parameter'].sudo().get_param(
+            PARAM_STRICT, 'False') in ('True', 'true', '1')
+        esito = verifica_pdf_firmato(
+            pdf_bytes, trust_roots=self._carica_trust_roots(), strict=strict)
+
+        # La marca temporale di pyHanko e' tz-aware: Odoo vuole UTC naive.
+        mt = esito.get('marca_temporale')
+        if mt is not None and mt.tzinfo is not None:
+            from datetime import timezone
+            mt = mt.astimezone(timezone.utc).replace(tzinfo=None)
+
+        self.write({
+            'firma_valida': esito['valida'],
+            'firma_dettagli': esito['dettagli'],
+            'firmatario_nome': esito['firmatario_nome'] or self.firmatario_nome,
+            'firmatario_cf': esito['firmatario_cf'] or self.firmatario_cf,
+            'marca_temporale_data': mt or self.marca_temporale_data,
+            'tsa_provider': esito['tsa'] or self.tsa_provider,
+        })
+
+        if not esito['valida']:
+            self.stato = 'errore'
+            self.message_post(body=_(
+                "<strong>Verifica firma FALLITA.</strong> Vidimazione NON "
+                "chiusa.<br/><pre>%s</pre>") % esito['dettagli'])
             raise UserError(_(
-                "Carica prima il PDF firmato esternamente."
-            ))
-        # Verifica hash: il PDF caricato, una volta tolta la firma,
-        # dovrebbe avere lo stesso hash dell'unsigned. v1.0 NON facciamo
-        # questo controllo (pyHanko serve a estrarre il sub-tree
-        # pre-firma); ci limitiamo a verificare che il responsabile
-        # abbia dichiarato i campi necessari.
-        mancanti = []
-        if not self.firma_valida:
-            mancanti.append("flag 'Firma valida'")
-        if not self.marca_temporale_data:
-            mancanti.append("data marca temporale")
-        if not self.firmatario_nome:
-            mancanti.append("nome firmatario")
-        if mancanti:
-            raise UserError(_(
-                "Per chiudere la vidimazione compila: %s.\n\n"
-                "v1.0: la verifica e' dichiarata dal responsabile. "
-                "v2.0 verifichera' crittograficamente con pyHanko."
-            ) % ", ".join(mancanti))
-        # Congela i record `bozza`: calcola hash chain + passa a
-        # 'vidimato'. Questo congelamento "fotografa" lo stato del
-        # registro al momento della marca temporale (modello v1.1:
-        # alterabile fino alla firma, immutabile dopo).
+                "Firma non valida: la vidimazione non e' stata chiusa.\n\n%s"
+            ) % esito['dettagli'])
+
+        # Firma valida: congela i record bozza (hash chain) e chiude.
         Isc = self.env['crocevia.registro.iscrizione']
         n_congelati = Isc._congela_bozza_per_vidimazione()
-
         self.stato = 'firmato_verificato'
         self.message_post(body=_(
-            "Vidimazione chiusa. %d record congelati. "
-            "Firmatario: %s, marca temporale: %s, TSA: %s."
+            "Vidimazione chiusa (firma verificata). %d record congelati. "
+            "Firmatario: %s, marca temporale: %s.<br/><pre>%s</pre>"
         ) % (
             n_congelati,
-            self.firmatario_nome,
+            self.firmatario_nome or '?',
             self.marca_temporale_data.strftime('%d/%m/%Y %H:%M:%S')
                 if self.marca_temporale_data else '?',
-            self.tsa_provider or '?',
+            esito['dettagli'],
         ))
 
     # ----------------- inalterabilita' post-chiusura -----------------

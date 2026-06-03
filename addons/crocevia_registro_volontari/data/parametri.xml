@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Modalita' "strict qualified": se True, la firma e' considerata
+             valida solo se la catena verso le CA qualificate (trust list in
+             data/trust/) e' verificata. Default False: bastano integrita' +
+             marca temporale (tamper-evidence + data certa). Attivare quando
+             il bundle trust list AgID/EU e' caricato e testato. -->
+        <record id="param_firma_strict" model="ir.config_parameter">
+            <field name="key">crocevia_registro_volontari.firma_strict</field>
+            <field name="value">False</field>
+        </record>
+    </data>
+</odoo>

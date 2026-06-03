@@ -46,6 +46,13 @@
                             context="{'default_iscrizione_id': id}"/>
                 </header>
                 <sheet>
+                    <field name="avviso_vidimazione" invisible="1"/>
+                    <div class="alert alert-warning" role="alert"
+                         invisible="not avviso_vidimazione">
+                        <i class="fa fa-exclamation-triangle"/>
+                        <field name="avviso_vidimazione" nolabel="1" readonly="1"
+                               class="d-inline ms-1"/>
+                    </div>
                     <div class="oe_button_box" name="button_box">
                         <button class="oe_stat_button" icon="fa-link"
                                 disabled="1">

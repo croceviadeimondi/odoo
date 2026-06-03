@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Registro Volontari",
-    'version': '18.0.1.2.1',
+    'version': '18.0.2.0.0',
     'summary': "Registro volontari ETS conforme DM 6 ottobre 2021: "
                "inalterabilita', hash chain, vidimazione digitale",
     'description': """
@@ -49,15 +49,14 @@ aggiornamento trust roots.
         'crocevia_navigazione',
     ],
     'external_dependencies': {
-        'python': ['weasyprint'],
-        # 'pyhanko' e 'pyhanko-certvalidator' aggiunte in v2.0 quando
-        # implementeremo la verifica firma reale.
+        'python': ['weasyprint', 'pyhanko', 'pyhanko_certvalidator'],
     },
     'data': [
         'security/crocevia_registro_security.xml',
         'security/ir.model.access.csv',
         'data/ir_sequence_data.xml',
         'data/ir_cron_data.xml',
+        'data/parametri.xml',
         'wizards/crocevia_registro_annullamento_wizard_views.xml',
         'wizards/crocevia_registro_cessazione_wizard_views.xml',
         'wizards/crocevia_registro_export_wizard_views.xml',
