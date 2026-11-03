@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo noupdate="1">
+    <!-- Una volta al giorno: via le schede di chi e' uscito dall'app da piu'
+         dei mesi di conservazione (vedi _pulisci_respinti). -->
+    <record id="cron_pulisci_respinti" model="ir.cron">
+        <field name="name">Miniapp: cancella le schede respinte vecchie</field>
+        <field name="model_id" ref="model_crocevia_miniapp"/>
+        <field name="state">code</field>
+        <field name="code">model._pulisci_respinti()</field>
+        <field name="interval_number">1</field>
+        <field name="interval_type">days</field>
+        <field name="active" eval="True"/>
+    </record>
+</odoo>

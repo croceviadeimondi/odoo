@@ -1,6 +1,6 @@
 {
     'name': "Crocevia dei Mondi - Miniapp Telegram",
-    'version': '18.0.1.10.0',
+    'version': '18.0.1.11.0',
     'summary': "Collegamento soci-Telegram e API per la miniapp inventario e prestiti",
     'description': """
 Backend Odoo della sezione Inventario della miniapp Telegram.
@@ -34,6 +34,7 @@ Da Odoo lo staff resta libero di fare eccezioni.
         'security/ir.model.access.csv',
         'data/parametri_default.xml',
         'data/informativa_miniapp.xml',
+        'data/cron.xml',
         'views/res_partner_views.xml',
     ],
     'application': False,

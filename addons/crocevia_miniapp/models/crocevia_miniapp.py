@@ -14,6 +14,8 @@ import random
 import re
 from datetime import timedelta
 
+from dateutil.relativedelta import relativedelta
+
 from odoo import _, api, fields, models
 from odoo.exceptions import AccessError, UserError
 
@@ -39,6 +41,22 @@ ORDINI = {
 
 def _solo_cifre(isbn):
     return re.sub(r'[^0-9Xx]', '', isbn or '').upper()
+
+
+def _isbn_equivalenti(cifre):
+    """Lo stesso libro con l'ISBN a 10 e a 13 cifre: il codice a barre e'
+    sempre a 13 (978...), in inventario a volte c'e' quello vecchio a 10."""
+    uguali = {cifre}
+    if len(cifre) == 13 and cifre.startswith('978') and cifre.isdigit():
+        corpo = cifre[3:12]
+        resto = sum((10 - i) * int(c) for i, c in enumerate(corpo)) % 11
+        controllo = (11 - resto) % 11
+        uguali.add(corpo + ('X' if controllo == 10 else str(controllo)))
+    elif len(cifre) == 10 and cifre[:9].isdigit():
+        corpo = '978' + cifre[:9]
+        somma = sum(int(c) * (1 if i % 2 == 0 else 3) for i, c in enumerate(corpo))
+        uguali.add(corpo + str((10 - somma % 10) % 10))
+    return uguali
 
 
 class CroceviaMiniapp(models.AbstractModel):
@@ -298,7 +316,8 @@ class CroceviaMiniapp(models.AbstractModel):
         self._controlla_accesso()
         prov = self._provvisorio(provvisorio_id)
         prov.sudo().write({'telegram_id': False, 'miniapp_provvisorio': False,
-                           'is_socio': False, 'active': False})
+                           'is_socio': False, 'active': False,
+                           'miniapp_respinto_il': fields.Date.context_today(self)})
         prov.message_post(body=_(
             "Non riconosciutə come sociə da %s: accesso alla miniapp chiuso.", da_chi),
             subtype_xmlid='mail.mt_note')
@@ -340,8 +359,9 @@ class CroceviaMiniapp(models.AbstractModel):
             ]
             cifre = _solo_cifre(parola)
             if len(cifre) >= 10 and cifre == parola.upper():
+                uguali = _isbn_equivalenti(cifre)
                 ids = self.env['crocevia.bene'].search([('isbn', '!=', False)]).filtered(
-                    lambda b: _solo_cifre(b.isbn) == cifre).ids
+                    lambda b: _solo_cifre(b.isbn) in uguali).ids
                 alternative.append(('id', 'in', ids))
             dominio += ['|'] * (len(alternative) - 1) + alternative
         return dominio
@@ -704,6 +724,57 @@ class CroceviaMiniapp(models.AbstractModel):
             risultato.append(dati)
         return risultato
 
+    @api.model
+    def in_scadenza(self, giorni=3):
+        """Prestiti aperti che scadono esattamente fra `giorni` giorni, per il
+        promemoria di qualche giorno prima: il bot gira una volta al giorno,
+        quindi ognuno lo riceve una volta sola."""
+        self._controlla_accesso()
+        giorno = fields.Date.context_today(self) + timedelta(days=int(giorni))
+        prestiti = self.env['crocevia.prestito'].search([
+            ('data_restituzione_effettiva', '=', False),
+            ('data_restituzione_prevista', '=', giorno),
+            ('partner_id.telegram_id', '!=', False),
+        ])
+        return [dict(self._dati_prestito(p), telegram_id=p.partner_id.telegram_id)
+                for p in prestiti]
+
+    @api.model
+    def _pulisci_respinti(self):
+        """Dal cron. Le schede di chi e' stato respinto o ha chiesto di
+        cancellare i dati, passati i mesi di conservazione: senza prestiti si
+        cancellano, con prestiti (tutti chiusi) restano anonime, perche' lo
+        storico dei beni ne ha bisogno. Chi ha un utente Odoo non si tocca."""
+        mesi = self._param_int('mesi_conservazione_respinti', 6)
+        limite = fields.Date.context_today(self) - relativedelta(months=mesi)
+        Prestito = self.env['crocevia.prestito'].sudo()
+        schede = self.env['res.partner'].sudo().with_context(active_test=False).search([
+            ('miniapp_respinto_il', '!=', False),
+            ('miniapp_respinto_il', '<=', limite),
+            ('active', '=', False),
+            ('telegram_id', '=', False),
+        ])
+        cancellate = anonime = 0
+        for p in schede:
+            if p.user_ids:
+                continue
+            prestiti = Prestito.search([('partner_id', '=', p.id)])
+            if prestiti.filtered(lambda x: not x.data_restituzione_effettiva):
+                continue
+            if not prestiti:
+                try:
+                    with self.env.cr.savepoint():
+                        p.unlink()
+                    cancellate += 1
+                    continue
+                except Exception:
+                    pass  # qualcosa la usa ancora: si rende anonima
+            p.message_ids.unlink()
+            p.write({'name': _("Ex utente app %s", p.id), 'email': False, 'phone': False,
+                     'miniapp_respinto_il': False, 'miniapp_privacy_data': False})
+            anonime += 1
+        return {'cancellate': cancellate, 'anonime': anonime}
+
     # ---------------- aggiunta beni (staff) ----------------
 
     @api.model
@@ -864,7 +935,8 @@ class CroceviaMiniapp(models.AbstractModel):
         vals = {'telegram_id': False, 'miniapp_privacy_data': False, 'admin_miniapp': False,
                 'miniapp_provvisorio': False}
         if provvisorio:
-            vals.update(is_socio=False, active=False)
+            vals.update(is_socio=False, active=False,
+                        miniapp_respinto_il=fields.Date.context_today(self))
         p.sudo().write(vals)
         p.message_post(body=_(
             "Ha chiesto dal bot di cancellare i suoi dati dall'app: Telegram scollegato%s. "

@@ -25,6 +25,14 @@ class ResPartner(models.Model):
         help="Si e' registratə dalla miniapp e la sta gia' usando, ma il "
              "direttivo non ha ancora confermato che sia sociə.",
     )
+    miniapp_respinto_il = fields.Date(
+        string="Uscitə dall'app il",
+        copy=False,
+        help="Quando la registrazione provvisoria e' stata respinta, o la "
+             "persona ha chiesto di cancellare i suoi dati. Passati i mesi "
+             "del parametro crocevia_miniapp.mesi_conservazione_respinti la "
+             "scheda si cancella, o si rende anonima se ha prestiti.",
+    )
     admin_miniapp = fields.Boolean(
         string="Amministra la biblioteca",
         tracking=True,
