@@ -37,4 +37,26 @@
             </xpath>
         </field>
     </record>
+
+    <!-- Prestiti: il nome di chi l'ha preso, quando non ha una scheda. -->
+    <record id="view_crocevia_prestito_list_inherit_miniapp" model="ir.ui.view">
+        <field name="name">crocevia.prestito.list.inherit.miniapp</field>
+        <field name="model">crocevia.prestito</field>
+        <field name="inherit_id" ref="crocevia_inventario.view_crocevia_prestito_list"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="prestatario_libero" optional="show"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_crocevia_prestito_form_inherit_miniapp" model="ir.ui.view">
+        <field name="name">crocevia.prestito.form.inherit.miniapp</field>
+        <field name="model">crocevia.prestito</field>
+        <field name="inherit_id" ref="crocevia_inventario.view_crocevia_prestito_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="prestatario_libero" invisible="partner_id"/>
+            </field>
+        </field>
+    </record>
 </odoo>

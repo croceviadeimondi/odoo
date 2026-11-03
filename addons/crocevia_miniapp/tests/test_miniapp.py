@@ -145,6 +145,22 @@ class TestMiniapp(TransactionCase):
         with self.assertRaises(UserError):
             self.api.annulla_prestito('111', prestito['id'])
 
+    def test_presta_a_nome(self):
+        # Un nome senza scheda.
+        p = self.api.presta_a_nome(self.libro.id, 'Ospite Gentile', False, 'Admin')
+        self.assertEqual(p['socio'], 'Ospite Gentile')
+        self.assertEqual(self.libro.stato_bene, 'in_prestito')
+        with self.assertRaises(UserError):
+            self.api.presta_a_nome(self.libro.id, 'Altro', False, 'Admin')
+        self.assertIn(p['id'], [x['id'] for x in self.api.prestiti_aperti()])
+        self.api.chiudi_prestito(p['id'], 'Admin')
+        # A unə sociə, anche se ha gia' un prestito suo.
+        self.api.presta('111', self.gioco.id)
+        p = self.api.presta_a_nome(self.libro.id, '', self.mario.id, 'Admin')
+        self.assertEqual(p['socio'], 'Mario Rossi')
+        with self.assertRaises(UserError):
+            self.api.presta_a_nome(self.libro.id, '', False, 'Admin')
+
     def test_un_prestito_per_socio(self):
         self.api.presta('111', self.libro.id)
         with self.assertRaises(UserError):

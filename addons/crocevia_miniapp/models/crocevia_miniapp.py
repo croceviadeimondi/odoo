@@ -114,7 +114,7 @@ class CroceviaMiniapp(models.AbstractModel):
             'bene_id': prestito.bene_id.id,
             'titolo': prestito.bene_id.name,
             'sede': prestito.bene_id.sede_id.citta,
-            'socio': prestito.partner_id.name,
+            'socio': prestito.partner_id.name or prestito.prestatario_libero or '',
             'data_prestito': fields.Date.to_string(prestito.data_prestito),
             'scadenza': fields.Date.to_string(
                 prestito.data_restituzione_prevista) or False,
@@ -543,6 +543,40 @@ class CroceviaMiniapp(models.AbstractModel):
             "Prestito annullato subito dallə sociə %s dalla miniapp.", socio.name),
             subtype_xmlid='mail.mt_note')
         return True
+
+    @api.model
+    def presta_a_nome(self, bene_id, nome, partner_id, da_chi, giorni=0):
+        """Chi amministra la biblioteca segna che un bene l'ha preso qualcun
+        altro: unə sociə (`partner_id`) o solo un nome. Il server la chiama
+        solo per gli admin. Qui non vale il limite di un prestito a testa:
+        e' una registrazione di quello che e' successo, non una richiesta."""
+        self._controlla_accesso()
+        self.env.cr.execute(
+            "SELECT id FROM crocevia_bene WHERE id = %s FOR UPDATE", [int(bene_id)])
+        bene = self.env['crocevia.bene'].browse(int(bene_id)).exists()
+        if not bene:
+            raise UserError(_("Questo bene non c'è più."))
+        bene.invalidate_recordset()
+        if bene.mancante:
+            raise UserError(_("Questo bene risulta mancante."))
+        if bene.in_prestito:
+            raise UserError(_("È già in prestito."))
+        partner = self.env['res.partner'].browse(int(partner_id)).exists() if partner_id else None
+        nome = (nome or '').strip()
+        if not partner and not nome:
+            raise UserError(_("Scrivi chi l'ha preso."))
+        oggi = fields.Date.context_today(self)
+        prestito = self.env['crocevia.prestito'].create({
+            'bene_id': bene.id,
+            'partner_id': partner.id if partner else False,
+            'prestatario_libero': False if partner else nome,
+            'data_prestito': oggi,
+            'data_restituzione_prevista': oggi + timedelta(
+                days=int(giorni) or self._param_int('giorni_prestito', 30)),
+        })
+        prestito.message_post(body=_("Segnato dalla miniapp da %s.", da_chi),
+                              subtype_xmlid='mail.mt_note')
+        return self._dati_prestito(prestito)
 
     @api.model
     def miei_prestiti(self, telegram_id):

@@ -46,6 +46,7 @@ libero di fare eccezioni.
 | `bene(bene_id, staff)` | soci | un bene |
 | `presta(telegram_id, bene_id, note)` | soci | apre il prestito |
 | `annulla_prestito(telegram_id, prestito_id)` | soci | nei primi due minuti, il prestito sparisce |
+| `presta_a_nome(bene_id, nome, partner_id, da_chi, giorni)` | admin | segna che l'ha preso qualcun altro, anche solo un nome |
 | `miei_prestiti(telegram_id)` | soci | prestiti aperti |
 | `restituisci(telegram_id, prestito_id)` | soci | solo i propri |
 | `prolunga(prestito_id, giorni, da_chi)` | staff | da oggi se gia' scaduto |
