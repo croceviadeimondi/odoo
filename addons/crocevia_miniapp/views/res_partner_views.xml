@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Il collegamento a Telegram sta nella pagina Socio, di tutte e due
+         le schede: lo staff deve poterlo correggere senza passare dal bot. -->
+    <record id="view_res_partner_form_inherit_miniapp" model="ir.ui.view">
+        <field name="name">res.partner.form.inherit.crocevia.miniapp</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id"
+               ref="crocevia_tesseramento.view_res_partner_form_inherit_crocevia"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='socio']//field[@name='categoria_socio']"
+                   position="after">
+                <field name="telegram_id"/>
+                <field name="admin_miniapp"/>
+                <field name="miniapp_provvisorio" readonly="1"
+                       invisible="not miniapp_provvisorio"/>
+                <field name="miniapp_privacy_data" readonly="1"
+                       invisible="not miniapp_privacy_data"/>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="view_res_partner_socio_form_inherit_miniapp" model="ir.ui.view">
+        <field name="name">res.partner.socio.form.inherit.crocevia.miniapp</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id"
+               ref="crocevia_tesseramento.view_res_partner_socio_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='socio']//field[@name='categoria_socio']"
+                   position="after">
+                <field name="telegram_id"/>
+                <field name="admin_miniapp"/>
+                <field name="miniapp_provvisorio" readonly="1"
+                       invisible="not miniapp_provvisorio"/>
+                <field name="miniapp_privacy_data" readonly="1"
+                       invisible="not miniapp_privacy_data"/>
+            </xpath>
+        </field>
+    </record>
+
+    <!-- Prestiti: il nome di chi l'ha preso, quando non ha una scheda. -->
+    <record id="view_crocevia_prestito_list_inherit_miniapp" model="ir.ui.view">
+        <field name="name">crocevia.prestito.list.inherit.miniapp</field>
+        <field name="model">crocevia.prestito</field>
+        <field name="inherit_id" ref="crocevia_inventario.view_crocevia_prestito_list"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="prestatario_libero" optional="show"/>
+            </field>
+        </field>
+    </record>
+    <record id="view_crocevia_prestito_form_inherit_miniapp" model="ir.ui.view">
+        <field name="name">crocevia.prestito.form.inherit.miniapp</field>
+        <field name="model">crocevia.prestito</field>
+        <field name="inherit_id" ref="crocevia_inventario.view_crocevia_prestito_form"/>
+        <field name="arch" type="xml">
+            <field name="partner_id" position="after">
+                <field name="prestatario_libero" invisible="partner_id"/>
+            </field>
+        </field>
+    </record>
+</odoo>

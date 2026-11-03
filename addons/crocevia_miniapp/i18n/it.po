@@ -1,0 +1,16 @@
+# Traduzioni italiane del modulo crocevia_miniapp.
+# Stesso pattern degli altri moduli: i nomi sono gia' in italiano, questo
+# file aggiunge la chiave it_IT al jsonb.
+msgid ""
+msgstr ""
+"Project-Id-Version: crocevia_miniapp 18.0.1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#. module: crocevia_miniapp
+#: model:res.groups,name:crocevia_miniapp.group_crocevia_miniapp
+msgid "Miniapp Telegram (utente tecnico)"
+msgstr "Miniapp Telegram (utente tecnico)"

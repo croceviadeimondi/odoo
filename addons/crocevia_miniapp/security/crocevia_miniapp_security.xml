@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <!-- Gruppo dell'utente tecnico della miniapp. Non va dato a
+             persone: chi gestisce l'inventario usa i ruoli di
+             crocevia_ruoli. -->
+        <record id="group_crocevia_miniapp" model="res.groups">
+            <field name="name">Miniapp Telegram (utente tecnico)</field>
+            <field name="category_id"
+                   ref="crocevia_tesseramento.module_category_crocevia"/>
+            <field name="comment">Solo per l'utente tecnico della miniapp: beni, prestiti e schede contatto, nient'altro.</field>
+            <field name="implied_ids" eval="[(4, ref('base.group_user'))]"/>
+        </record>
+    </data>
+
+    <!-- noupdate: la chiave API la crea a mano chi amministra, e un
+         upgrade non deve toccare l'utente. -->
+    <data noupdate="1">
+        <record id="user_miniapp" model="res.users">
+            <field name="name">Miniapp Telegram</field>
+            <field name="login">miniapp</field>
+            <!-- Senza email Odoo non lascia scrivere nel chatter. I
+                 messaggi sono note interne: non partono mail. -->
+            <field name="email">miniapp@croceviadeimondi.org</field>
+            <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_miniapp')])]"/>
+        </record>
+    </data>
+</odoo>
