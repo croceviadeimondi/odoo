@@ -40,7 +40,7 @@ class CroceviaMiniapp(models.AbstractModel):
         # senza questo controllo un Membro potrebbe aprire prestiti a nome
         # di chiunque passando un telegram_id a caso.
         if not (self.env.su or self.env.user.has_group(GRUPPO)):
-            raise AccessError(_("Questa API e' riservata all'utente della miniapp."))
+            raise AccessError(_("Questa API è riservata all'utente della miniapp."))
 
     def _param_int(self, chiave, default):
         valore = self.env['ir.config_parameter'].sudo().get_param(
@@ -63,7 +63,7 @@ class CroceviaMiniapp(models.AbstractModel):
     def _socio_obbligatorio(self, telegram_id):
         socio = self._socio(telegram_id)
         if not socio:
-            raise UserError(_("Non risulti socio: registrati dalla miniapp."))
+            raise UserError(_("Non risulti sociə: registrati dalla miniapp."))
         return socio
 
     def _dati_socio(self, partner):
@@ -119,6 +119,17 @@ class CroceviaMiniapp(models.AbstractModel):
         return self._dati_socio(socio) if socio else False
 
     @api.model
+    def informativa(self):
+        """Il testo dell'informativa privacy, lo stesso del primo accesso a Odoo.
+
+        L'utente tecnico non legge i parametri di sistema: questo e' l'unico
+        che gli serve.
+        """
+        self._controlla_accesso()
+        return self.env['ir.config_parameter'].sudo().get_param(
+            'crocevia_gdpr.informativa_html') or False
+
+    @api.model
     def candidati(self, nome, cognome):
         """Soci senza Telegram il cui nome somiglia a quello dichiarato.
 
@@ -141,7 +152,7 @@ class CroceviaMiniapp(models.AbstractModel):
             [('telegram_id', '=', str(telegram_id))], limit=1)
         if gia:
             raise UserError(_(
-                "Questo Telegram e' gia' collegato a %s.", gia.display_name))
+                "Questo Telegram è già collegato a %s.", gia.display_name))
 
     @api.model
     def collega_socio(self, telegram_id, partner_id, privacy_data, da_chi):
@@ -150,10 +161,10 @@ class CroceviaMiniapp(models.AbstractModel):
         self._controlla_telegram_libero(telegram_id)
         socio = self.env['res.partner'].browse(int(partner_id)).exists()
         if not socio or not socio.is_socio:
-            raise UserError(_("La scheda scelta non e' un socio."))
+            raise UserError(_("La scheda scelta non è di unə sociə."))
         if socio.telegram_id:
             raise UserError(_(
-                "%s ha gia' un Telegram collegato.", socio.display_name))
+                "%s ha già un Telegram collegato.", socio.display_name))
         socio.write({
             'telegram_id': str(telegram_id),
             'miniapp_privacy_data': privacy_data or fields.Datetime.now(),
@@ -183,7 +194,7 @@ class CroceviaMiniapp(models.AbstractModel):
             'miniapp_privacy_data': privacy_data or fields.Datetime.now(),
         })
         socio.message_post(body=_(
-            "Scheda creata dalla miniapp Telegram, socio confermato da %s.",
+            "Scheda creata dalla miniapp Telegram, sociə confermatə da %s.",
             da_chi), subtype_xmlid='mail.mt_note')
         return self._dati_socio(socio)
 
@@ -240,7 +251,7 @@ class CroceviaMiniapp(models.AbstractModel):
         self._controlla_accesso()
         bene = self.env['crocevia.bene'].browse(int(bene_id)).exists()
         if not bene:
-            raise UserError(_("Questo bene non c'e' piu'."))
+            raise UserError(_("Questo bene non c'è più."))
         return self._dati_bene(bene, staff=staff)
 
     # ---------------- prestiti ----------------
@@ -259,7 +270,7 @@ class CroceviaMiniapp(models.AbstractModel):
             "SELECT id FROM res_partner WHERE id = %s FOR UPDATE", [socio.id])
         bene = self.env['crocevia.bene'].browse(int(bene_id)).exists()
         if not bene:
-            raise UserError(_("Questo bene non c'e' piu'."))
+            raise UserError(_("Questo bene non c'è più."))
         bene.invalidate_recordset()
         if bene.mancante:
             raise UserError(_("Questo bene risulta mancante."))
@@ -274,7 +285,7 @@ class CroceviaMiniapp(models.AbstractModel):
         ])
         if aperti >= massimo:
             raise UserError(_(
-                "Hai gia' un prestito aperto: restituiscilo prima di "
+                "Hai già un prestito aperto: restituiscilo prima di "
                 "prenderne un altro."))
 
         oggi = fields.Date.context_today(self)
@@ -286,7 +297,7 @@ class CroceviaMiniapp(models.AbstractModel):
                 days=self._param_int('giorni_prestito', 30)),
             'note': note or False,
         })
-        prestito.message_post(body=_("Prestito aperto dal socio dalla miniapp."), subtype_xmlid='mail.mt_note')
+        prestito.message_post(body=_("Prestito aperto dallə sociə dalla miniapp."), subtype_xmlid='mail.mt_note')
         return self._dati_prestito(prestito)
 
     @api.model
@@ -305,12 +316,12 @@ class CroceviaMiniapp(models.AbstractModel):
         socio = self._socio_obbligatorio(telegram_id)
         prestito = self.env['crocevia.prestito'].browse(int(prestito_id)).exists()
         if not prestito or prestito.partner_id != socio:
-            raise UserError(_("Non e' un tuo prestito."))
+            raise UserError(_("Non è un tuo prestito."))
         if prestito.data_restituzione_effettiva:
             return self._dati_prestito(prestito)
         prestito.action_restituisci()
         prestito.message_post(body=_(
-            "Restituzione dichiarata dal socio dalla miniapp."), subtype_xmlid='mail.mt_note')
+            "Restituzione dichiarata dallə sociə dalla miniapp."), subtype_xmlid='mail.mt_note')
         return self._dati_prestito(prestito)
 
     @api.model
@@ -319,7 +330,7 @@ class CroceviaMiniapp(models.AbstractModel):
         self._controlla_accesso()
         prestito = self.env['crocevia.prestito'].browse(int(prestito_id)).exists()
         if not prestito or prestito.data_restituzione_effettiva:
-            raise UserError(_("Questo prestito non e' aperto."))
+            raise UserError(_("Questo prestito non è aperto."))
         giorni = int(giorni or self._param_int('giorni_prestito', 30))
         # Si parte da oggi se e' gia' scaduto: prolungare un prestito in
         # ritardo da due mesi deve dare tempo davvero.

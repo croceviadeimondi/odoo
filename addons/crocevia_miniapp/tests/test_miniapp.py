@@ -44,6 +44,11 @@ class TestMiniapp(TransactionCase):
         self.mario.stato_socio = 'cessato'
         self.assertFalse(self.api.socio_da_telegram('111'))
 
+    def test_informativa(self):
+        self.env['ir.config_parameter'].sudo().set_param(
+            'crocevia_gdpr.informativa_html', '<p>Testo di prova</p>')
+        self.assertEqual(self.api.informativa(), '<p>Testo di prova</p>')
+
     def test_candidati_esclude_chi_ha_telegram(self):
         ids = [c['id'] for c in self.api.candidati('', 'Rossi')]
         self.assertIn(self.senza_telegram.id, ids)

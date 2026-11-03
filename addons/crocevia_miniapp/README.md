@@ -33,6 +33,7 @@ libero di fare eccezioni.
 | metodo | chi | cosa |
 |---|---|---|
 | `socio_da_telegram(telegram_id)` | tutti | la scheda, o False se non e' socio (o e' cessato) |
+| `informativa()` | tutti | il testo di `crocevia_gdpr.informativa_html` |
 | `candidati(nome, cognome)` | staff | soci senza Telegram con nome simile |
 | `collega_socio(telegram_id, partner_id, privacy_data, da_chi)` | staff | "e' lui" |
 | `crea_socio(telegram_id, nome, cognome, privacy_data, da_chi)` | staff | "socio nuovo", stato Richiesta |
@@ -59,8 +60,18 @@ bene), con chi l'ha fatta.
 ## Messa in funzione
 
 1. `-i crocevia_miniapp`.
-2. Impostazioni > Utenti > Miniapp Telegram > Sicurezza account > nuova chiave
-   API. Va nella config del server del calendario, non nel repo.
+2. La chiave API dell'utente tecnico. Dall'interfaccia non si puo': l'utente
+   non ha password, e Odoo 18 vuole una scadenza sulle chiavi di chi non e'
+   amministratore. Da shell, con `sudo()`, nasce senza scadenza:
+
+   ```python
+   u = env.ref('crocevia_miniapp.user_miniapp')
+   print(env['res.users.apikeys'].with_user(u).sudo()._generate(None, 'server calendario', None))
+   env.cr.commit()
+   ```
+
+   Va in `odoo.json` del server del calendario, non nel repo. Si revoca
+   dalla scheda dell'utente, Sicurezza account.
 
 ## Test
 
