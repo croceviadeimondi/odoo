@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_miniapp_bene,crocevia.bene miniapp,crocevia_inventario.model_crocevia_bene,group_crocevia_miniapp,1,1,1,0
+access_miniapp_bene_genere,crocevia.bene.genere miniapp,crocevia_inventario.model_crocevia_bene_genere,group_crocevia_miniapp,1,1,1,0
+access_miniapp_bene_sistema,crocevia.bene.sistema miniapp,crocevia_inventario.model_crocevia_bene_sistema,group_crocevia_miniapp,1,1,1,0
+access_miniapp_prestito,crocevia.prestito miniapp,crocevia_inventario.model_crocevia_prestito,group_crocevia_miniapp,1,1,1,0
+access_miniapp_sede,crocevia.sede miniapp ro,crocevia_inventario.model_crocevia_sede,group_crocevia_miniapp,1,0,0,0
+access_miniapp_partner,res.partner miniapp,base.model_res_partner,group_crocevia_miniapp,1,1,1,0
