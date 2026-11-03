@@ -168,7 +168,11 @@ class CroceviaMiniapp(models.AbstractModel):
         if socio.telegram_id:
             raise UserError(_(
                 "%s ha già un Telegram collegato.", socio.display_name))
-        socio.write({
+        # sudo solo per questi due campi: se la scheda e' di qualcunə che ha
+        # anche un utente Odoo (il direttivo, per esempio), Odoo 18 vuole il
+        # permesso di modificare gli utenti, e l'utente tecnico non ce l'ha
+        # apposta. Che sia unə sociə e' gia' controllato qui sopra.
+        socio.sudo().write({
             'telegram_id': str(telegram_id),
             'miniapp_privacy_data': privacy_data or fields.Datetime.now(),
         })

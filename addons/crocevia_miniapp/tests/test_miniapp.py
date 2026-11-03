@@ -65,6 +65,16 @@ class TestMiniapp(TransactionCase):
         with self.assertRaises(UserError):
             self.api.crea_socio('333', 'Altro', 'Nome', False, 'Staff')
 
+    def test_collega_socio_con_utente_odoo(self):
+        # Il direttivo ha un utente Odoo: la sua scheda non si modifica
+        # senza i permessi sugli utenti, che l'utente tecnico non ha.
+        utente = self.env['res.users'].create({
+            'name': 'Membro del direttivo', 'login': 'direttivo_prova',
+            'groups_id': [(6, 0, [self.env.ref('base.group_user').id])]})
+        utente.partner_id.write({'is_socio': True, 'stato_socio': 'attivo'})
+        self.api.collega_socio('555', utente.partner_id.id, False, 'Staff')
+        self.assertEqual(utente.partner_id.telegram_id, '555')
+
     def test_crea_socio(self):
         dati = self.api.crea_socio('444', ' Giulia ', 'Verdi', False, 'Staff')
         socio = self.env['res.partner'].browse(dati['id'])
