@@ -120,14 +120,17 @@ class CroceviaMiniapp(models.AbstractModel):
 
     @api.model
     def informativa(self):
-        """Il testo dell'informativa privacy, lo stesso del primo accesso a Odoo.
+        """Il testo dell'informativa privacy dell'app.
 
-        L'utente tecnico non legge i parametri di sistema: questo e' l'unico
-        che gli serve.
+        Quello di crocevia_gdpr e' per chi usa il gestionale; resta come
+        riserva se il parametro dell'app manca. L'utente tecnico non legge
+        i parametri di sistema: questi sono gli unici che gli servono.
         """
         self._controlla_accesso()
-        return self.env['ir.config_parameter'].sudo().get_param(
-            'crocevia_gdpr.informativa_html') or False
+        Param = self.env['ir.config_parameter'].sudo()
+        return (Param.get_param('crocevia_miniapp.informativa_html')
+                or Param.get_param('crocevia_gdpr.informativa_html')
+                or False)
 
     @api.model
     def candidati(self, nome, cognome):

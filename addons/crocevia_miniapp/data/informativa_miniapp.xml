@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Informativa privacy dell'app Telegram (prenotazioni e inventario).
+     E' un testo per chi si registra, diverso da quello di crocevia_gdpr,
+     che e' rivolto a chi usa il gestionale. noupdate: una volta corretto
+     da Impostazioni > Tecnico > Parametri di sistema, un upgrade non lo
+     riscrive. -->
+<odoo noupdate="1">
+    <record id="param_informativa_html" model="ir.config_parameter">
+        <field name="key">crocevia_miniapp.informativa_html</field>
+        <field name="value"><![CDATA[<p><strong>Informativa sul trattamento dei dati personali - app Telegram del Crocevia dei Mondi</strong></p>
+<p>Ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679 (GDPR).</p>
+
+<p><strong>Titolare del trattamento</strong><br>
+Crocevia dei Mondi APS, codice fiscale 90116320723, email info@croceviadeimondi.org.</p>
+
+<p><strong>Quali dati trattiamo</strong></p>
+<ul>
+<li>nome e cognome che inserisci registrandoti;</li>
+<li>i dati del tuo account Telegram che Telegram passa all'app: identificativo numerico, nome e username;</li>
+<li>data e ora in cui hai accettato questa informativa;</li>
+<li>le prenotazioni delle stanze: sede, giorno, orario, titolo e note dell'attività, eventuale richiesta di apertura;</li>
+<li>i prestiti dell'inventario: bene, date di prestito e di restituzione.</li>
+</ul>
+
+<p><strong>Perché e su quale base</strong><br>
+Per riservare l'app aə sociɜ, gestire prenotazioni e prestiti e mandarti i promemoria collegati (art. 6.1.b GDPR: rapporto associativo). Per prevenire abusi, ad esempio sospendere chi prenota senza presentarsi (art. 6.1.f: legittimo interesse dell'associazione).
+Registrarti all'app non sostituisce il tesseramento: la tessera resta gestita in sede.</p>
+
+<p><strong>Chi vede i tuoi dati</strong></p>
+<ul>
+<li>lo staff e il direttivo: la richiesta di registrazione arriva nei loro gruppi Telegram, che conferma se sei sociə;</li>
+<li>le altre persone vedono titolo e orario delle attività prenotate nel calendario, non chi ha in prestito un bene;</li>
+<li>i fornitori dei servizi che usiamo, come responsabili o titolari autonomi: Telegram (che ha sede fuori dall'Unione europea), Google per il calendario, IONOS per il server dove gira l'app e il gestionale.</li>
+</ul>
+<p>Non vendiamo né cediamo i tuoi dati ad altri.</p>
+
+<p><strong>Per quanto tempo</strong><br>
+Finché sei sociə e poi per il tempo richiesto dagli obblighi di legge dell'associazione. Le prenotazioni restano nel calendario come storico delle attività. Una richiesta di registrazione respinta si cancella.</p>
+
+<p><strong>I tuoi diritti</strong><br>
+Puoi chiedere accesso, rettifica, cancellazione, limitazione, portabilità e opporti al trattamento (artt. 15-22 GDPR) scrivendo a info@croceviadeimondi.org. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (www.garanteprivacy.it).</p>
+
+<p><strong>Se non vuoi registrarti</strong><br>
+Senza registrazione l'app non si può usare. Le attività in sede restano aperte come sempre.</p>]]></field>
+    </record>
+</odoo>

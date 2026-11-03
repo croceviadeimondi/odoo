@@ -33,7 +33,7 @@ libero di fare eccezioni.
 | metodo | chi | cosa |
 |---|---|---|
 | `socio_da_telegram(telegram_id)` | tutti | la scheda, o False se non e' socio (o e' cessato) |
-| `informativa()` | tutti | il testo di `crocevia_gdpr.informativa_html` |
+| `informativa()` | tutti | `crocevia_miniapp.informativa_html`, o quella del gestionale se manca |
 | `candidati(nome, cognome)` | staff | soci senza Telegram con nome simile |
 | `collega_socio(telegram_id, partner_id, privacy_data, da_chi)` | staff | "e' lui" |
 | `crea_socio(telegram_id, nome, cognome, privacy_data, da_chi)` | staff | "socio nuovo", stato Richiesta |
