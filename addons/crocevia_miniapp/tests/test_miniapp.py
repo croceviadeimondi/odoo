@@ -101,6 +101,22 @@ class TestMiniapp(TransactionCase):
         self.assertEqual(self.libro.stato_bene, 'disponibile')
         self.assertFalse(self.api.miei_prestiti('111'))
 
+    def test_annulla_prestito(self):
+        prestito = self.api.presta('111', self.libro.id)
+        with self.assertRaises(UserError):
+            self.api.annulla_prestito('222', prestito['id'])
+        self.assertTrue(self.api.annulla_prestito('111', prestito['id']))
+        self.assertFalse(self.env['crocevia.prestito'].browse(prestito['id']).exists())
+        self.assertEqual(self.libro.stato_bene, 'disponibile')
+        self.assertEqual(self.libro.numero_prestiti, 0)
+        # Dopo due minuti no.
+        prestito = self.api.presta('111', self.libro.id)
+        self.env.cr.execute("UPDATE crocevia_prestito SET create_date = now() - interval '5 minutes' WHERE id = %s",
+                            [prestito['id']])
+        self.env['crocevia.prestito'].invalidate_model(['create_date'])
+        with self.assertRaises(UserError):
+            self.api.annulla_prestito('111', prestito['id'])
+
     def test_un_prestito_per_socio(self):
         self.api.presta('111', self.libro.id)
         with self.assertRaises(UserError):

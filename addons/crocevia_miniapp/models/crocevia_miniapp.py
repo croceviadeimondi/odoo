@@ -438,6 +438,30 @@ class CroceviaMiniapp(models.AbstractModel):
         return self._dati_prestito(prestito)
 
     @api.model
+    def annulla_prestito(self, telegram_id, prestito_id):
+        """Il socio ha preso qualcosa per sbaglio e preme "Annulla" subito dopo:
+        il prestito sparisce, come se non ci fosse mai stato, cosi' non conta
+        fra i piu' presi e non resta nello storico.
+
+        Solo il proprio, solo se ancora aperto, e solo nei primi due minuti:
+        dopo e' un prestito vero, e si restituisce.
+        """
+        self._controlla_accesso()
+        socio = self._socio_obbligatorio(telegram_id)
+        prestito = self.env['crocevia.prestito'].browse(int(prestito_id)).exists()
+        if not prestito or prestito.partner_id != socio or prestito.data_restituzione_effettiva:
+            raise UserError(_("Non c'è un tuo prestito da annullare."))
+        if fields.Datetime.now() - prestito.create_date > timedelta(minutes=2):
+            raise UserError(_("È passato troppo tempo per annullarlo: restituiscilo."))
+        bene = prestito.bene_id
+        # L'utente tecnico non cancella prestiti: qui si', ma solo questo.
+        prestito.sudo().unlink()
+        bene.message_post(body=_(
+            "Prestito annullato subito dallə sociə %s dalla miniapp.", socio.name),
+            subtype_xmlid='mail.mt_note')
+        return True
+
+    @api.model
     def miei_prestiti(self, telegram_id):
         self._controlla_accesso()
         socio = self._socio_obbligatorio(telegram_id)
