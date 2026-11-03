@@ -321,6 +321,7 @@ class CroceviaMiniapp(models.AbstractModel):
                 'autore': b.autore or False,
                 'sede': b.sede_id.citta,
                 'stato': b.stato_bene,
+                'categoria': b.categoria,
             } for b in beni],
             'autori': autori,
             'generi': [{'id': g.id, 'nome': g.name} for g in generi],
@@ -340,14 +341,21 @@ class CroceviaMiniapp(models.AbstractModel):
         for campo in ('sede_id', 'sistema_id'):
             if filtri.get(campo):
                 dominio.append((campo, '=', int(filtri[campo])))
-        if filtri.get('categoria'):
-            dominio.append(('categoria', '=', filtri['categoria']))
+        # Un tipo solo, o piu' di uno insieme (GdR e manuali stanno in una
+        # scheda sola della biblioteca).
+        categoria = filtri.get('categoria')
+        if isinstance(categoria, (list, tuple)) and categoria:
+            dominio.append(('categoria', 'in', list(categoria)))
+        elif categoria:
+            dominio.append(('categoria', '=', categoria))
         if filtri.get('genere_id'):
             dominio.append(('genere_ids', 'in', [int(filtri['genere_id'])]))
         if filtri.get('solo_disponibili'):
             dominio.append(('stato_bene', '=', 'disponibile'))
         Bene = self.env['crocevia.bene']
-        beni = Bene.search(dominio, offset=int(offset), limit=min(int(limit), 200))
+        # Prima i piu' presi in prestito, poi per titolo.
+        beni = Bene.search(dominio, offset=int(offset), limit=min(int(limit), 200),
+                           order='numero_prestiti desc, name, id')
         return {
             'totale': Bene.search_count(dominio),
             'beni': [self._dati_bene(b, staff=staff) for b in beni],

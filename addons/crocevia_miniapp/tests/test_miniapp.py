@@ -160,6 +160,22 @@ class TestMiniapp(TransactionCase):
         self.assertIn('Umberto Eco', self.api.suggerimenti('umberto')['autori'])
         self.assertEqual(self.api.suggerimenti('r'), {'beni': [], 'autori': [], 'generi': []})
 
+    def test_catalogo_piu_tipi_insieme(self):
+        filtri = {'sede_id': self.sede.id}
+        ids = [b['id'] for b in self.api.catalogo(
+            dict(filtri, categoria=['libro', 'gioco_da_tavolo']))['beni']]
+        self.assertEqual(sorted(ids), sorted([self.libro.id, self.gioco.id]))
+        ids = [b['id'] for b in self.api.catalogo(dict(filtri, categoria='libro'))['beni']]
+        self.assertEqual(ids, [self.libro.id])
+
+    def test_catalogo_prima_i_piu_presi(self):
+        filtri = {'sede_id': self.sede.id}
+        self.assertEqual(self.api.catalogo(filtri)['beni'][0]['id'], self.gioco.id)  # C < I
+        prestito = self.api.presta('111', self.libro.id)
+        self.api.restituisci('111', prestito['id'])
+        self.assertEqual(self.libro.numero_prestiti, 1)
+        self.assertEqual(self.api.catalogo(filtri)['beni'][0]['id'], self.libro.id)
+
     def test_prolunga_parte_da_oggi_se_scaduto(self):
         prestito = self.api.presta('111', self.libro.id)
         record = self.env['crocevia.prestito'].browse(prestito['id'])
