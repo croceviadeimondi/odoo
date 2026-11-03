@@ -13,10 +13,12 @@ I fogli "Wishlist GDT", "Wishlist GDR", "Vecchio GDT", "Vecchio GDR"
 sono IGNORATI di proposito.
 
 C'e' anche la LIBRERIA: workbook separati (uno per sede), con un foglio
-per genere (Romanzi, Fumetti, Manga, Biografie, ...). Tutti i fogli
-diventano categoria `libro`, col campo `genere` preso dal nome del
-foglio. I prestiti annotati nei fogli vanno in nota (niente dati
-personali strutturati).
+per genere (Romanzi, Fumetti, Manga, Biografie, ...). I fogli diventano
+categoria `libro`, col campo `genere` preso dal nome del foglio.
+
+Dati personali: il foglio PRESTITI (nomi, cellulari, email) e ogni altro
+foglio con cellulari o email NON si leggono, e le colonne "IN PRESTITO A"
+non finiscono da nessuna parte. I prestiti si tengono in Odoo, non qui.
 
 USO (gira sul TUO PC, non in repo; richiede openpyxl):
 
@@ -46,8 +48,16 @@ DOPO L'IMPORT:
     rm /tmp/wb_*.xlsx /tmp/lib_*.xlsx /tmp/inventario_per_odoo.csv
 
 Note tecniche:
-    - External id deterministici `__import__.bene_<sede>_<NNNN>`, contati
-      per sede nell'ordine GDT, GDR, Attrezzature, Oggettistica. I beni
+    - LIBRI: external id ricavato dal contenuto, non dalla posizione:
+      `__import__.libro_<sede>_<hash di titolo|autore|numero>`, con `_2`,
+      `_3`... per le copie. Riordinare il foglio o inserire righe non
+      sposta niente: reimportando, ogni libro aggiorna se stesso e i nuovi
+      si aggiungono. I libri gia' in Odoo hanno avuto questo id con
+      `tools/migra_id_libreria.py` (una volta sola, 3 novembre 2026).
+      Le righe d'intestazione dei fogli ("LANDOVER (vedi sotto)",
+      "LA MIA ENCICLOPEDIA") si saltano.
+    - GIOCHI: external id deterministici `__import__.bene_<sede>_<NNNN>`,
+      contati per sede nell'ordine GDT, GDR, Attrezzature, Oggettistica. I beni
       GDT gia' importati (Barletta 0001..0158, Trani 0001..0046) vengono
       cosi' AGGIORNATI, non duplicati, e gli altri fogli accodati dopo.
     - Le righe senza titolo e i divisori (DIVISORIO=TRUE, solo GDT) sono
@@ -57,7 +67,9 @@ Note tecniche:
       libero `proprietario_libero`. Aggiorna PARTNER_BY_NAME se cambiano.
 """
 import argparse
+import hashlib
 import re
+import unicodedata
 import sys
 
 try:
@@ -314,7 +326,41 @@ GENERE_LIBRERIA = {
     'FUMETTI': 'Fumetti e Graphic Novel',
     'Libri sul disegno': 'Libri sul disegno',
     'La mia enciclopedia': 'Enciclopedie',
+    'Enciclopedie': 'Enciclopedie',
+    'Enciclopedie - Opere storiche': 'Enciclopedie',
 }
+
+# Fogli della libreria che non sono libri e contengono dati personali: non
+# si aprono nemmeno. In piu' si salta ogni foglio che ha colonne di contatto.
+FOGLI_LIBRERIA_ESCLUSI = {'PRESTITI'}
+COLONNE_PERSONALI = {'CELLULARE', 'INDIRIZZOE-MAIL', 'EMAIL', 'E-MAIL', 'TELEFONO'}
+
+
+def norm_chiave(s):
+    """Testo per confronti: minuscolo, senza accenti ne' punteggiatura.
+    Uguale a quello di tools/migra_id_libreria.py: se cambia qui, cambia
+    anche li', o gli id non combaciano piu'."""
+    s = unicodedata.normalize('NFKD', normalizza_testo(s).lower())
+    s = ''.join(c for c in s if not unicodedata.combining(c))
+    return re.sub(r'[^a-z0-9]+', ' ', s).strip()
+
+
+def id_libro(sede_slug, titolo, autore, numero, copia):
+    """External id dal contenuto: lo stesso libro ha sempre lo stesso id,
+    ovunque stia nel foglio. `copia` conta le copie uguali (1, 2, ...)."""
+    # "1.0" e "1" sono lo stesso numero: Excel legge le celle numeriche come
+    # decimali, e il vecchio import li aveva salvati cosi'.
+    numero = re.sub(r'^(\d+)\.0$', r'\1', normalizza_testo(numero))
+    chiave = '|'.join(norm_chiave(x) for x in (titolo, autore, numero))
+    h = hashlib.sha1(chiave.encode('utf-8')).hexdigest()[:10]
+    return f"__import__.libro_{sede_slug}_{h}" + (f"_{copia}" if copia > 1 else '')
+
+
+def e_intestazione(titolo, autore, numero, editore):
+    """Righe che nei fogli fanno da titolo di sezione, non libri."""
+    if '(vedi sotto' in titolo.lower():
+        return True
+    return titolo.isupper() and not (autore or numero or editore)
 
 
 def _col(row, *candidati):
@@ -345,18 +391,20 @@ def build_libro(row, genere):
         note.append(f"Numero: {numero}")
     if mese_anno and not anno:
         note.append(f"Periodo: {mese_anno}")
-    # Prestito -> testo in nota (niente crocevia.prestito, scelta CDM).
-    presta = _col(row, 'IN PRESTITO A', 'IN PRESTITO A:')
-    data_p = _col(row, 'DATA', 'DATA:').split(' ')[0]  # togli l'ora se data
-    if presta:
-        note.append(f"In prestito a {presta}" + (f" dal {data_p}" if data_p else ""))
+    autore = _col(row, 'AUTORE / AUTRICE', 'AUTORE/AUTRICE')
+    editore = _col(row, 'CASA EDITRICE')
+    if e_intestazione(titolo, autore, numero, editore):
+        return None
+    # "IN PRESTITO A" non si legge: sono nomi di persone, e i prestiti
+    # stanno in Odoo.
     return {
         'name': titolo,
         'categoria': 'libro',
         'genere_ids': genere,
-        'autore': _col(row, 'AUTORE / AUTRICE', 'AUTORE/AUTRICE'),
-        'editore': _col(row, 'CASA EDITRICE'),
+        'autore': autore,
+        'editore': editore,
         'anno_pubblicazione': anno,
+        '_numero': numero,
         'proprietario_id/.id': '',
         'proprietario_libero': 'Crocevia dei Mondi APS',
         'note': ' | '.join(note),
@@ -367,21 +415,31 @@ def converti_workbook_libreria(path, sede_xid, out_rows, stats):
     """Itera TUTTI i fogli del workbook libreria (uno per genere)."""
     wb = openpyxl.load_workbook(path, read_only=True, data_only=True)
     sede_slug = sede_xid.split('.')[1]
-    idx = 0
+    copie = {}
     tot = 0
     for nome_foglio in wb.sheetnames:
+        if nome_foglio.strip() in FOGLI_LIBRERIA_ESCLUSI:
+            stats['fogli_saltati'].append(f"{sede_slug}:{nome_foglio}")
+            continue
         genere = GENERE_LIBRERIA.get(nome_foglio, nome_foglio.strip())
         ws = wb[nome_foglio]
+        righe = iter_righe(ws)
         n_foglio = 0
-        for row in iter_righe(ws):
+        for row in righe:
+            # Un foglio con cellulari o email e' un elenco di persone, non
+            # di libri: si lascia stare tutto.
+            if COLONNE_PERSONALI & {normalizza_testo(h).upper().replace(' ', '') for h in row}:
+                stats['fogli_saltati'].append(f"{sede_slug}:{nome_foglio}")
+                break
             vals = build_libro(row, genere)
             if vals is None:
                 continue
-            idx += 1
             n_foglio += 1
-            # Namespace id distinto dai giochi (bene_<sede>) per non
-            # collidere: bene_lib_<sede>.
-            vals['id'] = f"__import__.bene_lib_{sede_slug}_{idx:04d}"
+            numero = vals.pop('_numero')
+            numero = re.sub(r'^(\d+)\.0$', r'\1', numero)
+            k = tuple(norm_chiave(x) for x in (vals['name'], vals['autore'], numero))
+            copie[k] = copie.get(k, 0) + 1
+            vals['id'] = id_libro(sede_slug, vals['name'], vals['autore'], numero, copie[k])
             vals['sede_id/id'] = sede_xid
             out_rows.append(vals)
         stats['per_foglio'].append((sede_slug + ' [lib]', genere, n_foglio))
@@ -455,7 +513,7 @@ def main():
 
     import csv
     out_rows = []
-    stats = {'per_foglio': [], 'fogli_mancanti': []}
+    stats = {'per_foglio': [], 'fogli_mancanti': [], 'fogli_saltati': []}
     if args.barletta:
         converti_workbook(args.barletta, 'crocevia_inventario.sede_barletta',
                           out_rows, stats)
@@ -483,6 +541,8 @@ def main():
     print("    Dettaglio per foglio:")
     for sede, foglio, n in stats['per_foglio']:
         print(f"      {sede:18s} {foglio:14s} {n:4d}")
+    if stats['fogli_saltati']:
+        print(f"    Fogli saltati (dati personali): {', '.join(stats['fogli_saltati'])}")
     if stats['fogli_mancanti']:
         print(f"    Fogli attesi non trovati: {', '.join(stats['fogli_mancanti'])}")
     print()
