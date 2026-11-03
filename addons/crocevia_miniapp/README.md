@@ -38,6 +38,7 @@ libero di fare eccezioni.
 | `collega_socio(telegram_id, partner_id, privacy_data, da_chi)` | staff | "e' lui" |
 | `crea_socio(telegram_id, nome, cognome, privacy_data, da_chi)` | staff | "socio nuovo", stato Richiesta |
 | `opzioni()` | tutti | sedi, categorie, generi, sistemi, regole |
+| `suggerimenti(testo, limite)` | soci | titoli, autori e generi mentre si scrive |
 | `catalogo(filtri, offset, limit, staff)` | soci | beni; chi ha il bene solo con `staff=True` |
 | `bene(bene_id, staff)` | soci | un bene |
 | `presta(telegram_id, bene_id, note)` | soci | apre il prestito |

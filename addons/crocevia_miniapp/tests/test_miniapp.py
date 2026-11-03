@@ -129,6 +129,37 @@ class TestMiniapp(TransactionCase):
         staff = self.api.catalogo(filtri, staff=True)['beni'][0]
         self.assertEqual(staff['prestito']['socio'], 'Mario Rossi')
 
+    def test_ricerca_per_parole(self):
+        # Le parole in ordine sparso, e l'ISBN senza trattini.
+        filtri = {'sede_id': self.sede.id}
+        self.assertEqual([b['id'] for b in self.api.catalogo(
+            dict(filtri, testo='rosa nome'))['beni']], [self.libro.id])
+        self.assertEqual([b['id'] for b in self.api.catalogo(
+            dict(filtri, testo='9788845212345'))['beni']], [self.libro.id])
+
+    def test_suggerimenti(self):
+        self.libro.autore = 'Eco Umberto'
+        self.env['crocevia.bene'].create({
+            'name': 'Rosa dei venti di prova', 'categoria': 'libro',
+            'sede_id': self.sede.id, 'autore': 'ECO Umberto'})
+        s = self.api.suggerimenti('rosa')
+        titoli = [b['titolo'] for b in s['beni']]
+        # Prima chi comincia con la parola cercata.
+        self.assertLess(titoli.index('Rosa dei venti di prova'),
+                        titoli.index('Il nome della rosa'))
+        autori = self.api.suggerimenti('eco umb')['autori']
+        self.assertEqual(len([a for a in autori if a.lower() == 'eco umberto']), 1)
+        # Un pezzo a meta' parola ("seconda") viene dopo chi comincia per "eco".
+        self.env['crocevia.bene'].create({
+            'name': 'La seconda di prova', 'categoria': 'libro', 'sede_id': self.sede.id})
+        titoli = [b['titolo'] for b in self.api.suggerimenti('eco', limite=50)['beni']]
+        if 'La seconda di prova' in titoli:
+            self.assertLess(titoli.index('Il nome della rosa'), titoli.index('La seconda di prova'))
+        # Di un bene con tanti autori si propone solo quello cercato.
+        self.libro.autore = 'Mario Bianchi, Umberto Eco, Anna Verdi'
+        self.assertIn('Umberto Eco', self.api.suggerimenti('umberto')['autori'])
+        self.assertEqual(self.api.suggerimenti('r'), {'beni': [], 'autori': [], 'generi': []})
+
     def test_prolunga_parte_da_oggi_se_scaduto(self):
         prestito = self.api.presta('111', self.libro.id)
         record = self.env['crocevia.prestito'].browse(prestito['id'])

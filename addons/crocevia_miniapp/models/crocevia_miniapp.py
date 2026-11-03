@@ -225,18 +225,118 @@ class CroceviaMiniapp(models.AbstractModel):
             'max_prestiti': self._param_int('max_prestiti', 1),
         }
 
+    def _dominio_testo(self, testo):
+        """Ogni parola deve comparire da qualche parte: titolo, autore, ISBN
+        o codice. Cosi' "rosa eco" trova "Il nome della rosa" di Eco, che
+        cercato come frase intera non c'e'.
+
+        Un ISBN si scrive senza trattini, ma in inventario spesso li ha: le
+        parole fatte di sole cifre si confrontano anche ignorandoli.
+        """
+        dominio = []
+        for parola in (testo or '').split()[:6]:
+            alternative = [
+                ('name', 'ilike', parola),
+                ('autore', 'ilike', parola),
+                ('isbn', 'ilike', parola),
+                ('codice_interno', 'ilike', parola),
+            ]
+            cifre = _solo_cifre(parola)
+            if len(cifre) >= 10 and cifre == parola.upper():
+                ids = self.env['crocevia.bene'].search([('isbn', '!=', False)]).filtered(
+                    lambda b: _solo_cifre(b.isbn) == cifre).ids
+                alternative.append(('id', 'in', ids))
+            dominio += ['|'] * (len(alternative) - 1) + alternative
+        return dominio
+
+    def _inizio_parola(self, campo, parola):
+        """Il campo ha una parola che comincia con `parola`: all'inizio, dopo
+        uno spazio, un apostrofo o un trattino. "eco" trova "Eco Umberto" e
+        "L'eco", non "seconda"."""
+        p = parola.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+        modelli = [p + '%', '% ' + p + '%', "%'" + p + '%', '%-' + p + '%', '%(' + p + '%']
+        return ['|'] * (len(modelli) - 1) + [(campo, '=ilike', m) for m in modelli]
+
+    @api.model
+    def suggerimenti(self, testo, limite=8):
+        """Quello che compare sotto la barra di ricerca mentre si scrive.
+
+        Contano le parole che cominciano con quello che si e' scritto: ogni
+        parola cercata deve aprire una parola del titolo o dell'autore.
+        Prima i titoli che cominciano proprio cosi', poi gli altri. Solo se
+        sono pochi si aggiungono i pezzi a meta' parola. Gli autori si
+        propongono uno per uno, anche quando il bene ne ha dieci.
+        """
+        self._controlla_accesso()
+        testo = (testo or '').strip()
+        vuoto = {'beni': [], 'autori': [], 'generi': []}
+        if len(testo) < 2:
+            return vuoto
+        limite = int(limite)
+        parole = [p.lower() for p in testo.split()[:6]]
+        Bene = self.env['crocevia.bene']
+
+        dominio = []
+        for parola in parole:
+            alternative = (self._inizio_parola('name', parola)
+                           + self._inizio_parola('autore', parola))
+            dominio += ['|'] + alternative
+        trovati = Bene.search(dominio, limit=200)
+
+        def apre_parola(valore, parola):
+            v = ' ' + re.sub(r"[\s'(\-]+", ' ', (valore or '').lower())
+            return (' ' + parola) in v
+
+        def peso(b):
+            titolo = (b.name or '').lower()
+            if titolo.startswith(' '.join(parole)):
+                return (0, titolo)
+            if all(apre_parola(b.name, p) for p in parole):
+                return (1, titolo)
+            return (2, titolo)
+
+        beni = sorted(trovati, key=peso)[:limite]
+        if len(beni) < limite:
+            # Pochi risultati veri: si aggiungono i pezzi a meta' parola,
+            # in fondo.
+            altri = Bene.search(self._dominio_testo(testo) + [('id', 'not in', [b.id for b in beni])],
+                                limit=limite - len(beni), order='name')
+            beni += list(altri)
+
+        autori = {}
+        for riga in Bene.search_read(self._inizio_parola('autore', parole[0]), ['autore'], limit=300):
+            for nome in re.split(r'[,;/]| e ', riga['autore']):
+                nome = nome.strip()
+                if nome and all(apre_parola(nome, p) for p in parole):
+                    # "ECO Umberto" e "Eco Umberto" sono la stessa persona.
+                    autori.setdefault(nome.lower(), nome)
+        autori = sorted(autori.values(), key=lambda n: (not n.lower().startswith(parole[0]), n.lower()))[:3]
+
+        generi = self.env['crocevia.bene.genere'].search(
+            self._inizio_parola('name', parole[0]), limit=3)
+        return {
+            'beni': [{
+                'id': b.id,
+                'titolo': b.name,
+                'autore': b.autore or False,
+                'sede': b.sede_id.citta,
+                'stato': b.stato_bene,
+            } for b in beni],
+            'autori': autori,
+            'generi': [{'id': g.id, 'nome': g.name} for g in generi],
+        }
+
     @api.model
     def catalogo(self, filtri=None, offset=0, limit=50, staff=False):
         self._controlla_accesso()
         filtri = filtri or {}
-        dominio = []
-        testo = (filtri.get('testo') or '').strip()
-        if testo:
-            dominio += ['|', '|', '|',
-                        ('name', 'ilike', testo),
-                        ('autore', 'ilike', testo),
-                        ('isbn', 'ilike', testo),
-                        ('codice_interno', 'ilike', testo)]
+        dominio = self._dominio_testo(filtri.get('testo'))
+        if filtri.get('bene_id'):
+            dominio.append(('id', '=', int(filtri['bene_id'])))
+        if filtri.get('autore'):
+            # Un autore scelto dai suggerimenti: anche i beni dove e' uno dei
+            # tanti.
+            dominio.append(('autore', 'ilike', filtri['autore']))
         for campo in ('sede_id', 'sistema_id'):
             if filtri.get(campo):
                 dominio.append((campo, '=', int(filtri[campo])))
