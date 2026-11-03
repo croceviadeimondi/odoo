@@ -657,6 +657,33 @@ class CroceviaMiniapp(models.AbstractModel):
         return self._dati_prestito(prestito)
 
     @api.model
+    def riapri_prestito(self, prestito_id, da_chi):
+        """Lo staff ha visto la foto della restituzione e il bene in sede non
+        c'e': il prestito torna aperto, a nome di chi l'aveva."""
+        self._controlla_accesso()
+        prestito = self.env['crocevia.prestito'].browse(int(prestito_id)).exists()
+        if not prestito:
+            raise UserError(_("Questo prestito non c'è più."))
+        riaperto = bool(prestito.data_restituzione_effettiva)
+        if riaperto:
+            # Se intanto qualcun altro l'ha preso, il bene in sede c'era: chi
+            # ha ragione lo decide lo staff da Odoo, non un bottone.
+            dopo = self.env['crocevia.prestito'].search([
+                ('bene_id', '=', prestito.bene_id.id),
+                ('data_restituzione_effettiva', '=', False),
+            ], limit=1)
+            if dopo:
+                raise UserError(_(
+                    "Nel frattempo l'ha preso %s: sistemalo da Odoo.",
+                    dopo.partner_id.name or dopo.prestatario_libero or '?'))
+            prestito.data_restituzione_effettiva = False
+            prestito.message_post(body=_(
+                "Riaperto dalla miniapp da %s: il bene non è rientrato in sede.", da_chi),
+                subtype_xmlid='mail.mt_note')
+        return dict(self._dati_prestito(prestito), riaperto=riaperto,
+                    telegram_id=prestito.partner_id.telegram_id or False)
+
+    @api.model
     def scaduti(self):
         """Prestiti aperti con la scadenza oggi o gia' passata.
 
@@ -735,3 +762,113 @@ class CroceviaMiniapp(models.AbstractModel):
         bene = self.env['crocevia.bene'].create(vals)
         bene.message_post(body=_("Aggiunto dalla miniapp da %s.", da_chi), subtype_xmlid='mail.mt_note')
         return self._dati_bene(bene, staff=True)
+
+    @api.model
+    def bene_da_modificare(self, bene_id):
+        """I valori grezzi del bene, per riempire il form della modifica."""
+        self._controlla_accesso()
+        bene = self.env['crocevia.bene'].browse(int(bene_id)).exists()
+        if not bene:
+            raise UserError(_("Questo bene non c'è più."))
+        return {
+            'id': bene.id,
+            'name': bene.name,
+            'categoria': bene.categoria,
+            'sede_id': bene.sede_id.id,
+            'autore': bene.autore or '',
+            'editore': bene.editore or '',
+            'anno_pubblicazione': bene.anno_pubblicazione or '',
+            'isbn': bene.isbn or '',
+            'codice_interno': bene.codice_interno or '',
+            'valore_stimato': bene.valore_stimato or '',
+            'proprietario_libero': bene.proprietario_libero or '',
+            'note': bene.note or '',
+            'genere_ids': bene.genere_ids.ids,
+            'sistema_id': bene.sistema_id.id or False,
+            'mancante': bene.mancante,
+        }
+
+    @api.model
+    def modifica_bene(self, bene_id, valori, da_chi):
+        """Solo admin della biblioteca. I campi sono quelli del form: un campo
+        vuoto svuota, uno che non c'e' resta com'e'."""
+        self._controlla_accesso()
+        bene = self.env['crocevia.bene'].browse(int(bene_id)).exists()
+        if not bene:
+            raise UserError(_("Questo bene non c'è più."))
+        vals = {k: valori[k] or False for k in CAMPI_BENE
+                if k in valori and k != 'proprietario_id'}
+        if 'name' in vals and not vals['name']:
+            raise UserError(_("Manca il titolo."))
+        if 'sede_id' in vals and not vals['sede_id']:
+            raise UserError(_("Manca la sede."))
+        if 'genere_ids' in valori:
+            vals['genere_ids'] = [(6, 0, [int(g) for g in valori['genere_ids'] or []])]
+        if 'mancante' in valori:
+            vals['mancante'] = bool(valori['mancante'])
+        bene.write(vals)
+        bene.message_post(body=_("Modificato dalla miniapp da %s.", da_chi), subtype_xmlid='mail.mt_note')
+        return self._dati_bene(bene, staff=True)
+
+    # ---------------- dati personali (dal bot) ----------------
+
+    def _scheda_telegram(self, telegram_id):
+        # Anche archiviata o cessata: chi chiede i propri dati li ha anche
+        # se non usa piu' l'app.
+        if not telegram_id:
+            return self.env['res.partner']
+        return self.env['res.partner'].with_context(active_test=False).search(
+            [('telegram_id', '=', str(telegram_id))], limit=1)
+
+    @api.model
+    def dati_personali(self, telegram_id):
+        """Quello che l'app tiene di una persona, per /imieidati."""
+        self._controlla_accesso()
+        p = self._scheda_telegram(telegram_id)
+        if not p:
+            return False
+        Prestito = self.env['crocevia.prestito']
+        aperto = Prestito.search([('partner_id', '=', p.id),
+                                  ('data_restituzione_effettiva', '=', False)], limit=1)
+        return {
+            'nome': p.name,
+            'telegram_id': p.telegram_id,
+            'privacy': fields.Datetime.to_string(p.miniapp_privacy_data) or False,
+            'provvisorio': p.miniapp_provvisorio,
+            'socio': p.is_socio and p.stato_socio != 'cessato',
+            'numero_socio': p.numero_socio or False,
+            'admin': p.admin_miniapp,
+            'prestito': self._dati_prestito(aperto) if aperto else False,
+            'prestiti_totali': Prestito.search_count([('partner_id', '=', p.id)]),
+        }
+
+    @api.model
+    def cancella_dati(self, telegram_id):
+        """La persona chiede di togliere i suoi dati dall'app.
+
+        Subito si stacca il Telegram, e con lui l'accesso e i promemoria. Una
+        scheda provvisoria, che il direttivo non ha mai confermato, si
+        archivia. Il libro soci e lo storico dei prestiti hanno obblighi di
+        conservazione loro: li valuta la segreteria, che il bot avvisa.
+        """
+        self._controlla_accesso()
+        p = self._scheda_telegram(telegram_id)
+        if not p:
+            return False
+        aperto = self.env['crocevia.prestito'].search(
+            [('partner_id', '=', p.id), ('data_restituzione_effettiva', '=', False)], limit=1)
+        if aperto:
+            raise UserError(_(
+                "Hai ancora “%s” in prestito: riportalo, poi riprova.", aperto.bene_id.name))
+        provvisorio = p.miniapp_provvisorio
+        vals = {'telegram_id': False, 'miniapp_privacy_data': False, 'admin_miniapp': False,
+                'miniapp_provvisorio': False}
+        if provvisorio:
+            vals.update(is_socio=False, active=False)
+        p.sudo().write(vals)
+        p.message_post(body=_(
+            "Ha chiesto dal bot di cancellare i suoi dati dall'app: Telegram scollegato%s. "
+            "Libro soci e storico dei prestiti li valuta la segreteria.",
+            _(" e scheda provvisoria archiviata") if provvisorio else ''),
+            subtype_xmlid='mail.mt_note')
+        return {'id': p.id, 'nome': p.name, 'provvisorio': provvisorio}

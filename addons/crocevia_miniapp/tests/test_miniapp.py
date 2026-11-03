@@ -276,10 +276,12 @@ class TestMiniapp(TransactionCase):
 
     def test_scaduti(self):
         prestito = self.api.presta('111', self.libro.id)
-        self.assertFalse(self.api.scaduti())
+        # Solo i nostri: nel database possono esserci altri prestiti scaduti.
+        nostri = lambda: [p for p in self.api.scaduti() if p['id'] == prestito['id']]
+        self.assertFalse(nostri())
         record = self.env['crocevia.prestito'].browse(prestito['id'])
         record.data_restituzione_prevista = fields.Date.context_today(record)
-        scaduti = self.api.scaduti()
+        scaduti = nostri()
         self.assertEqual(len(scaduti), 1)
         self.assertEqual(scaduti[0]['telegram_id'], '111')
         self.assertEqual(scaduti[0]['giorni_ritardo'], 0)
@@ -306,3 +308,56 @@ class TestMiniapp(TransactionCase):
         self.assertFalse(bene.mancante)
         with self.assertRaises(UserError):
             self.api.crea_bene({'name': 'Senza sede'}, 'Staff')
+
+    def test_riapri_prestito(self):
+        prestito = self.api.presta('111', self.libro.id)
+        self.api.restituisci('111', prestito['id'])
+        dati = self.api.riapri_prestito(prestito['id'], 'Staff')
+        self.assertEqual(dati['telegram_id'], '111')
+        self.assertTrue(dati['riaperto'])
+        # Premuto due volte: la seconda non riapre niente.
+        self.assertFalse(self.api.riapri_prestito(prestito['id'], 'Staff')['riaperto'])
+        self.assertEqual(self.libro.stato_bene, 'in_prestito')
+        # Se intanto l'ha preso un altro, non si riapre il vecchio.
+        self.api.restituisci('111', prestito['id'])
+        self.api.presta('222', self.libro.id)
+        with self.assertRaises(UserError):
+            self.api.riapri_prestito(prestito['id'], 'Staff')
+
+    def test_modifica_bene(self):
+        genere = self.api.crea_genere('Gialli di prova')
+        valori = self.api.bene_da_modificare(self.libro.id)
+        self.assertEqual(valori['name'], 'Il nome della rosa')
+        self.api.modifica_bene(self.libro.id, {
+            'name': 'Il nome della rosa (ed. 1980)', 'autore': '',
+            'genere_ids': [genere['id']], 'mancante': True,
+        }, 'Admin')
+        self.assertEqual(self.libro.name, 'Il nome della rosa (ed. 1980)')
+        self.assertFalse(self.libro.autore)
+        self.assertEqual(self.libro.genere_ids.ids, [genere['id']])
+        self.assertEqual(self.libro.stato_bene, 'mancante')
+        # Quello che non arriva resta com'era.
+        self.assertTrue(self.libro.isbn)
+        with self.assertRaises(UserError):
+            self.api.modifica_bene(self.libro.id, {'name': ''}, 'Admin')
+
+    def test_dati_e_cancellazione(self):
+        dati = self.api.dati_personali('111')
+        self.assertEqual(dati['nome'], 'Mario Rossi')
+        self.assertFalse(self.api.dati_personali('999'))
+        prestito = self.api.presta('111', self.libro.id)
+        with self.assertRaises(UserError):
+            self.api.cancella_dati('111')
+        self.api.restituisci('111', prestito['id'])
+        esito = self.api.cancella_dati('111')
+        self.assertFalse(esito['provvisorio'])
+        self.assertFalse(self.mario.telegram_id)
+        self.assertTrue(self.mario.active)
+        self.assertFalse(self.api.socio_da_telegram('111'))
+
+    def test_cancellazione_provvisoria(self):
+        prov = self.api.registra_provvisorio('888', 'Nuova', 'Persona', False)
+        self.assertTrue(self.api.cancella_dati('888')['provvisorio'])
+        scheda = self.env['res.partner'].with_context(active_test=False).browse(prov['id'])
+        self.assertFalse(scheda.active)
+        self.assertFalse(scheda.is_socio)
