@@ -45,6 +45,8 @@ libero di fare eccezioni.
 | `miei_prestiti(telegram_id)` | soci | prestiti aperti |
 | `restituisci(telegram_id, prestito_id)` | soci | solo i propri |
 | `prolunga(prestito_id, giorni, da_chi)` | staff | da oggi se gia' scaduto |
+| `prestiti_aperti()` | admin | tutti i prestiti in corso, coi giorni di ritardo |
+| `chiudi_prestito(prestito_id, da_chi)` | admin | chiude a mano |
 | `scaduti()` | bot | per i promemoria del lunedi |
 | `stesso_isbn(isbn, sede_id)` | staff | doppioni, trattini a parte |
 | `cerca_soci(testo)` | staff | per il proprietario di un bene |

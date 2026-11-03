@@ -11,6 +11,7 @@
             <xpath expr="//page[@name='socio']//field[@name='categoria_socio']"
                    position="after">
                 <field name="telegram_id"/>
+                <field name="admin_miniapp"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
             </xpath>
@@ -26,6 +27,7 @@
             <xpath expr="//page[@name='socio']//field[@name='categoria_socio']"
                    position="after">
                 <field name="telegram_id"/>
+                <field name="admin_miniapp"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
             </xpath>

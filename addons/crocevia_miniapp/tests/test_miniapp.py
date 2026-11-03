@@ -176,6 +176,30 @@ class TestMiniapp(TransactionCase):
         self.assertEqual(self.libro.numero_prestiti, 1)
         self.assertEqual(self.api.catalogo(filtri)['beni'][0]['id'], self.libro.id)
 
+    def test_admin_e_prestiti_aperti(self):
+        self.assertFalse(self.api.socio_da_telegram('111')['admin'])
+        self.mario.admin_miniapp = True
+        self.assertTrue(self.api.socio_da_telegram('111')['admin'])
+        prestito = self.api.presta('222', self.libro.id)
+        record = self.env['crocevia.prestito'].browse(prestito['id'])
+        record.data_restituzione_prevista = fields.Date.context_today(record) - timedelta(days=3)
+        aperti = {p['id']: p for p in self.api.prestiti_aperti()}
+        self.assertEqual(aperti[prestito['id']]['giorni_ritardo'], 3)
+        self.assertEqual(aperti[prestito['id']]['socio'], 'Anna Bianchi')
+        self.api.chiudi_prestito(prestito['id'], 'Admin')
+        self.assertEqual(self.libro.stato_bene, 'disponibile')
+        self.assertNotIn(prestito['id'], [p['id'] for p in self.api.prestiti_aperti()])
+
+    def test_catalogo_ordini(self):
+        filtri = {'sede_id': self.sede.id}
+        titoli = lambda o: [b['titolo'] for b in self.api.catalogo(filtri, ordine=o)['beni']]
+        self.assertEqual(titoli('titolo'), ['Carcassonne', 'Il nome della rosa'])
+        self.assertEqual(titoli('recenti'), ['Carcassonne', 'Il nome della rosa'])
+        self.api.presta('111', self.gioco.id)
+        self.assertEqual(titoli('disponibili'), ['Il nome della rosa', 'Carcassonne'])
+        # Un ordine sconosciuto non passa: si torna al predefinito.
+        self.assertEqual(len(titoli('name; drop table x')), 2)
+
     def test_prolunga_parte_da_oggi_se_scaduto(self):
         prestito = self.api.presta('111', self.libro.id)
         record = self.env['crocevia.prestito'].browse(prestito['id'])

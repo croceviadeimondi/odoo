@@ -25,6 +25,17 @@ CAMPI_BENE = (
 )
 
 
+# Come si puo' ordinare il catalogo dall'app. Solo questi: l'ordine arriva
+# da fuori e finisce in una query.
+ORDINI = {
+    'popolari': 'numero_prestiti desc, name, id',
+    'recenti': 'create_date desc, id desc',
+    'titolo': 'name, id',
+    'autore': 'autore, name, id',
+    'disponibili': 'stato_bene, numero_prestiti desc, name, id',
+}
+
+
 def _solo_cifre(isbn):
     return re.sub(r'[^0-9Xx]', '', isbn or '').upper()
 
@@ -116,7 +127,9 @@ class CroceviaMiniapp(models.AbstractModel):
         """Chi e' questo Telegram. False se non e' (o non e' piu') socio."""
         self._controlla_accesso()
         socio = self._socio(telegram_id)
-        return self._dati_socio(socio) if socio else False
+        if not socio:
+            return False
+        return dict(self._dati_socio(socio), admin=socio.admin_miniapp)
 
     @api.model
     def informativa(self):
@@ -328,7 +341,7 @@ class CroceviaMiniapp(models.AbstractModel):
         }
 
     @api.model
-    def catalogo(self, filtri=None, offset=0, limit=50, staff=False):
+    def catalogo(self, filtri=None, offset=0, limit=50, staff=False, ordine='popolari'):
         self._controlla_accesso()
         filtri = filtri or {}
         dominio = self._dominio_testo(filtri.get('testo'))
@@ -353,9 +366,8 @@ class CroceviaMiniapp(models.AbstractModel):
         if filtri.get('solo_disponibili'):
             dominio.append(('stato_bene', '=', 'disponibile'))
         Bene = self.env['crocevia.bene']
-        # Prima i piu' presi in prestito, poi per titolo.
         beni = Bene.search(dominio, offset=int(offset), limit=min(int(limit), 200),
-                           order='numero_prestiti desc, name, id')
+                           order=ORDINI.get(ordine, ORDINI['popolari']))
         return {
             'totale': Bene.search_count(dominio),
             'beni': [self._dati_bene(b, staff=staff) for b in beni],
@@ -455,6 +467,42 @@ class CroceviaMiniapp(models.AbstractModel):
         prestito.message_post(body=_(
             "Prolungato di %(giorni)s giorni dalla miniapp da %(chi)s.",
             giorni=giorni, chi=da_chi), subtype_xmlid='mail.mt_note')
+        return self._dati_prestito(prestito)
+
+    @api.model
+    def prestiti_aperti(self):
+        """Tutti i prestiti in corso, per la vista degli admin della biblioteca:
+        prima quelli in ritardo da piu' tempo.
+
+        Il ritardo si conta qui e non dal campo `stato`, che e' salvato e si
+        aggiorna solo quando cambiano le date.
+        """
+        self._controlla_accesso()
+        oggi = fields.Date.context_today(self)
+        prestiti = self.env['crocevia.prestito'].search(
+            [('data_restituzione_effettiva', '=', False)],
+            order='data_restituzione_prevista, data_prestito, id')
+        risultato = []
+        for p in prestiti:
+            dati = self._dati_prestito(p)
+            prevista = p.data_restituzione_prevista
+            dati['giorni_ritardo'] = (oggi - prevista).days if prevista and prevista < oggi else 0
+            risultato.append(dati)
+        return risultato
+
+    @api.model
+    def chiudi_prestito(self, prestito_id, da_chi):
+        """Un admin chiude un prestito a mano: il bene e' tornato, ma chi
+        l'aveva non l'ha segnato dall'app."""
+        self._controlla_accesso()
+        prestito = self.env['crocevia.prestito'].browse(int(prestito_id)).exists()
+        if not prestito:
+            raise UserError(_("Questo prestito non c'è più."))
+        if prestito.data_restituzione_effettiva:
+            return self._dati_prestito(prestito)
+        prestito.action_restituisci()
+        prestito.message_post(body=_(
+            "Chiuso a mano dalla miniapp da %s.", da_chi), subtype_xmlid='mail.mt_note')
         return self._dati_prestito(prestito)
 
     @api.model

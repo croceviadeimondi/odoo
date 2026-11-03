@@ -19,6 +19,14 @@ class ResPartner(models.Model):
              "registrandosi dalla miniapp Telegram.",
     )
 
+    admin_miniapp = fields.Boolean(
+        string="Amministra la biblioteca",
+        tracking=True,
+        help="Dalla miniapp vede tutti i prestiti in corso, li prolunga e li "
+             "chiude a mano. Chi sta nel gruppo Telegram del direttivo lo e' "
+             "gia' senza spunta.",
+    )
+
     _sql_constraints = [
         ('telegram_id_unico', 'unique(telegram_id)',
          "Questo Telegram e' gia' collegato a un'altra scheda."),
