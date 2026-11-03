@@ -12,6 +12,8 @@
                    position="after">
                 <field name="telegram_id"/>
                 <field name="admin_miniapp"/>
+                <field name="miniapp_provvisorio" readonly="1"
+                       invisible="not miniapp_provvisorio"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
             </xpath>
@@ -28,6 +30,8 @@
                    position="after">
                 <field name="telegram_id"/>
                 <field name="admin_miniapp"/>
+                <field name="miniapp_provvisorio" readonly="1"
+                       invisible="not miniapp_provvisorio"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
             </xpath>

@@ -34,6 +34,9 @@ libero di fare eccezioni.
 |---|---|---|
 | `socio_da_telegram(telegram_id)` | tutti | la scheda, o False se non e' socio (o e' cessato) |
 | `informativa()` | tutti | `crocevia_miniapp.informativa_html`, o quella del gestionale se manca |
+| `registra_provvisorio(telegram_id, nome, cognome, privacy_data)` | tutti | scheda provvisoria: si entra subito |
+| `conferma_provvisorio(provvisorio_id, partner_id, da_chi)` | direttivo | sociə nuovə, o unione a una scheda esistente coi prestiti |
+| `rifiuta_provvisorio(provvisorio_id, da_chi)` | direttivo | archivia la provvisoria, chiude l'accesso |
 | `candidati(nome, cognome)` | staff | soci senza Telegram con nome simile |
 | `collega_socio(telegram_id, partner_id, privacy_data, da_chi)` | staff | "e' lui" |
 | `crea_socio(telegram_id, nome, cognome, privacy_data, da_chi)` | staff | "socio nuovo", stato Richiesta |

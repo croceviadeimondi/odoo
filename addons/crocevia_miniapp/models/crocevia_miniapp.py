@@ -221,6 +221,89 @@ class CroceviaMiniapp(models.AbstractModel):
 
     # ---------------- catalogo ----------------
 
+    # ---------------- registrazione provvisoria ----------------
+    # Chi si registra dalla miniapp entra subito: nasce una scheda provvisoria
+    # e il direttivo decide dopo. "Stessa persona" unisce la provvisoria alla
+    # scheda vera e ci sposta i prestiti fatti nel frattempo; "socio nuovo"
+    # tiene la provvisoria; "non e' socio" la archivia e chiude l'accesso.
+
+    @api.model
+    def registra_provvisorio(self, telegram_id, nome, cognome, privacy_data):
+        self._controlla_accesso()
+        self._controlla_telegram_libero(telegram_id)
+        nome_completo = ' '.join(
+            p.strip() for p in (nome or '', cognome or '') if p.strip())
+        if not nome_completo:
+            raise UserError(_("Servono nome e cognome."))
+        socio = self.env['res.partner'].create({
+            'name': nome_completo,
+            'is_socio': True,
+            'stato_socio': 'richiesta',
+            'telegram_id': str(telegram_id),
+            'miniapp_privacy_data': privacy_data or fields.Datetime.now(),
+            'miniapp_provvisorio': True,
+        })
+        socio.message_post(body=_(
+            "Registratə dalla miniapp Telegram: usa gia' l'app, il direttivo "
+            "deve ancora confermare che sia sociə."), subtype_xmlid='mail.mt_note')
+        return self._dati_socio(socio)
+
+    def _provvisorio(self, provvisorio_id):
+        prov = self.env['res.partner'].browse(int(provvisorio_id)).exists()
+        if not prov or not prov.miniapp_provvisorio:
+            raise UserError(_("Questa registrazione è già stata decisa."))
+        return prov
+
+    @api.model
+    def conferma_provvisorio(self, provvisorio_id, partner_id, da_chi):
+        """Il direttivo conferma. Senza `partner_id` e' sociə nuovə e la
+        scheda provvisoria resta; con `partner_id` e' la stessa persona di una
+        scheda che c'era gia': Telegram e prestiti passano a quella."""
+        self._controlla_accesso()
+        prov = self._provvisorio(provvisorio_id)
+        if not partner_id:
+            prov.sudo().write({'miniapp_provvisorio': False})
+            prov.message_post(body=_(
+                "Confermatə come sociə nuovə da %s.", da_chi), subtype_xmlid='mail.mt_note')
+            return self._dati_socio(prov)
+
+        socio = self.env['res.partner'].browse(int(partner_id)).exists()
+        if not socio or not socio.is_socio or socio == prov:
+            raise UserError(_("La scheda scelta non è di unə sociə."))
+        if socio.telegram_id:
+            raise UserError(_("%s ha già un Telegram collegato.", socio.display_name))
+        telegram, privacy = prov.telegram_id, prov.miniapp_privacy_data
+        prestiti = self.env['crocevia.prestito'].search([('partner_id', '=', prov.id)])
+        prestiti.write({'partner_id': socio.id})
+        # Il Telegram si toglie prima dalla provvisoria, ed e' scritto subito:
+        # Odoo salva le modifiche in blocco, e il vincolo di unicita'
+        # vedrebbe due schede con lo stesso Telegram.
+        prov.sudo().write({'telegram_id': False, 'miniapp_provvisorio': False, 'active': False})
+        prov.flush_recordset()
+        socio.sudo().write({'telegram_id': telegram, 'miniapp_privacy_data': privacy})
+        socio.message_post(body=_(
+            "Telegram collegato dalla miniapp, confermato da %(chi)s. Spostati "
+            "qui %(n)s prestiti fatti prima della conferma.",
+            chi=da_chi, n=len(prestiti)), subtype_xmlid='mail.mt_note')
+        prov.message_post(body=_(
+            "Registrazione provvisoria unita alla scheda di %s.", socio.display_name),
+            subtype_xmlid='mail.mt_note')
+        return self._dati_socio(socio)
+
+    @api.model
+    def rifiuta_provvisorio(self, provvisorio_id, da_chi):
+        """Il direttivo dice che non e' sociə: l'accesso si chiude. La scheda
+        si archivia e non si cancella, perche' i prestiti aperti restano da
+        recuperare e li vede chi amministra la biblioteca."""
+        self._controlla_accesso()
+        prov = self._provvisorio(provvisorio_id)
+        prov.sudo().write({'telegram_id': False, 'miniapp_provvisorio': False,
+                           'is_socio': False, 'active': False})
+        prov.message_post(body=_(
+            "Non riconosciutə come sociə da %s: accesso alla miniapp chiuso.", da_chi),
+            subtype_xmlid='mail.mt_note')
+        return True
+
     @api.model
     def opzioni(self):
         """Quello che serve per i filtri e per il form dei beni."""

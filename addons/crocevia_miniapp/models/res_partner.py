@@ -19,6 +19,12 @@ class ResPartner(models.Model):
              "registrandosi dalla miniapp Telegram.",
     )
 
+    miniapp_provvisorio = fields.Boolean(
+        string="Registrazione da confermare",
+        tracking=True,
+        help="Si e' registratə dalla miniapp e la sta gia' usando, ma il "
+             "direttivo non ha ancora confermato che sia sociə.",
+    )
     admin_miniapp = fields.Boolean(
         string="Amministra la biblioteca",
         tracking=True,

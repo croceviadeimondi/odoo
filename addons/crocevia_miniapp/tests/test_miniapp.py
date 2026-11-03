@@ -75,6 +75,34 @@ class TestMiniapp(TransactionCase):
         self.api.collega_socio('555', utente.partner_id.id, False, 'Staff')
         self.assertEqual(utente.partner_id.telegram_id, '555')
 
+    def test_registrazione_provvisoria_unita(self):
+        prov = self.api.registra_provvisorio('777', 'Luca', 'Rossi', False)
+        # Entra subito e prende un libro.
+        self.assertEqual(self.api.socio_da_telegram('777')['id'], prov['id'])
+        prestito = self.api.presta('777', self.libro.id)
+        # Il direttivo dice: e' la stessa persona di Luca Rossi.
+        socio = self.api.conferma_provvisorio(prov['id'], self.senza_telegram.id, 'Direttivo')
+        self.assertEqual(socio['id'], self.senza_telegram.id)
+        self.assertEqual(self.senza_telegram.telegram_id, '777')
+        self.assertEqual(self.env['crocevia.prestito'].browse(prestito['id']).partner_id,
+                         self.senza_telegram)
+        provvisoria = self.env['res.partner'].with_context(active_test=False).browse(prov['id'])
+        self.assertFalse(provvisoria.active)
+        self.assertEqual(self.api.socio_da_telegram('777')['id'], self.senza_telegram.id)
+        with self.assertRaises(UserError):
+            self.api.conferma_provvisorio(prov['id'], False, 'Direttivo')
+
+    def test_registrazione_provvisoria_nuova_e_rifiutata(self):
+        prov = self.api.registra_provvisorio('778', 'Nuova', 'Persona', False)
+        self.api.conferma_provvisorio(prov['id'], False, 'Direttivo')
+        scheda = self.env['res.partner'].browse(prov['id'])
+        self.assertFalse(scheda.miniapp_provvisorio)
+        self.assertEqual(self.api.socio_da_telegram('778')['id'], prov['id'])
+
+        prov = self.api.registra_provvisorio('779', 'Non', 'Socio', False)
+        self.api.rifiuta_provvisorio(prov['id'], 'Direttivo')
+        self.assertFalse(self.api.socio_da_telegram('779'))
+
     def test_crea_socio(self):
         dati = self.api.crea_socio('444', ' Giulia ', 'Verdi', False, 'Staff')
         socio = self.env['res.partner'].browse(dati['id'])
