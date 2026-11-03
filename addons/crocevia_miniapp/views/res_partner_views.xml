@@ -16,6 +16,8 @@
                        invisible="not miniapp_provvisorio"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
+                <field name="miniapp_respinto_il" readonly="1"
+                       invisible="not miniapp_respinto_il"/>
             </xpath>
         </field>
     </record>
@@ -34,6 +36,8 @@
                        invisible="not miniapp_provvisorio"/>
                 <field name="miniapp_privacy_data" readonly="1"
                        invisible="not miniapp_privacy_data"/>
+                <field name="miniapp_respinto_il" readonly="1"
+                       invisible="not miniapp_respinto_il"/>
             </xpath>
         </field>
     </record>

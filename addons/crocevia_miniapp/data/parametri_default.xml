@@ -10,4 +10,10 @@
         <field name="key">crocevia_miniapp.max_prestiti</field>
         <field name="value">1</field>
     </record>
+    <!-- Dopo quanti mesi si cancellano le schede di chi e' stato respinto o
+         ha chiesto di togliere i suoi dati. -->
+    <record id="param_mesi_conservazione_respinti" model="ir.config_parameter">
+        <field name="key">crocevia_miniapp.mesi_conservazione_respinti</field>
+        <field name="value">6</field>
+    </record>
 </odoo>

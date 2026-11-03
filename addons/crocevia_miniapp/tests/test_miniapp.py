@@ -361,3 +361,38 @@ class TestMiniapp(TransactionCase):
         scheda = self.env['res.partner'].with_context(active_test=False).browse(prov['id'])
         self.assertFalse(scheda.active)
         self.assertFalse(scheda.is_socio)
+
+    def test_isbn_a_10_e_13_cifre(self):
+        # 88-452-0612-2 e 978-88-452-0612-2: stesso libro, cifre di
+        # controllo diverse.
+        libro = self.env['crocevia.bene'].create({
+            'name': 'Il piccolo principe', 'categoria': 'libro',
+            'sede_id': self.sede.id, 'isbn': '88-452-0612-2'})
+        trovati = self.api.catalogo({'testo': '9788845206122'}, 0, 10, False)['beni']
+        self.assertIn(libro.id, [b['id'] for b in trovati])
+
+    def test_in_scadenza(self):
+        prestito = self.api.presta('111', self.libro.id)
+        record = self.env['crocevia.prestito'].browse(prestito['id'])
+        record.data_restituzione_prevista = fields.Date.context_today(record) + timedelta(days=3)
+        ids = [p['id'] for p in self.api.in_scadenza(3)]
+        self.assertIn(prestito['id'], ids)
+        self.assertNotIn(prestito['id'], [p['id'] for p in self.api.in_scadenza(2)])
+
+    def test_pulisci_respinti(self):
+        Partner = self.env['res.partner'].with_context(active_test=False)
+        vecchio = fields.Date.context_today(self.mario) - timedelta(days=400)
+        senza = self.api.registra_provvisorio('901', 'Senza', 'Prestiti', False)
+        con = self.api.registra_provvisorio('902', 'Con', 'Prestiti', False)
+        prestito = self.api.presta('902', self.gioco.id)
+        self.api.restituisci('902', prestito['id'])
+        recente = self.api.registra_provvisorio('903', 'Appena', 'Respintə', False)
+        for p in (senza, con, recente):
+            self.api.rifiuta_provvisorio(p['id'], 'Direttivo')
+        Partner.browse([senza['id'], con['id']]).write({'miniapp_respinto_il': vecchio})
+        self.env['crocevia.miniapp']._pulisci_respinti()
+        self.assertFalse(Partner.browse(senza['id']).exists())
+        anonima = Partner.browse(con['id'])
+        self.assertTrue(anonima.exists())
+        self.assertTrue(anonima.name.startswith('Ex utente app'))
+        self.assertEqual(Partner.browse(recente['id']).name, 'Appena Respintə')
