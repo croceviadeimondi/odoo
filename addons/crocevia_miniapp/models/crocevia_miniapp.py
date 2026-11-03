@@ -10,6 +10,7 @@ Le regole dei prestiti stanno qui e non nel server: un prestito aperto per
 socio, durata dai parametri di sistema. Valgono solo per la miniapp; da
 Odoo lo staff resta libero di fare eccezioni.
 """
+import random
 import re
 from datetime import timedelta
 
@@ -341,7 +342,7 @@ class CroceviaMiniapp(models.AbstractModel):
         }
 
     @api.model
-    def catalogo(self, filtri=None, offset=0, limit=50, staff=False, ordine='popolari'):
+    def catalogo(self, filtri=None, offset=0, limit=50, staff=False, ordine='popolari', seme=0):
         self._controlla_accesso()
         filtri = filtri or {}
         dominio = self._dominio_testo(filtri.get('testo'))
@@ -366,8 +367,17 @@ class CroceviaMiniapp(models.AbstractModel):
         if filtri.get('solo_disponibili'):
             dominio.append(('stato_bene', '=', 'disponibile'))
         Bene = self.env['crocevia.bene']
-        beni = Bene.search(dominio, offset=int(offset), limit=min(int(limit), 200),
-                           order=ORDINI.get(ordine, ORDINI['popolari']))
+        offset, limit = int(offset), min(int(limit), 200)
+        if ordine == 'casuale':
+            # A caso, ma sempre fra quelli che rispettano i filtri, e sempre
+            # nello stesso ordine per lo stesso seme: "Mostra altri" continua
+            # la stessa estrazione invece di ripescare quelli gia' visti.
+            ids = Bene.search(dominio, order='id').ids
+            random.Random(int(seme or 0)).shuffle(ids)
+            beni = Bene.browse(ids[offset:offset + limit])
+        else:
+            beni = Bene.search(dominio, offset=offset, limit=limit,
+                               order=ORDINI.get(ordine, ORDINI['popolari']))
         return {
             'totale': Bene.search_count(dominio),
             'beni': [self._dati_bene(b, staff=staff) for b in beni],

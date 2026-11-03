@@ -197,6 +197,11 @@ class TestMiniapp(TransactionCase):
         self.assertEqual(titoli('recenti'), ['Carcassonne', 'Il nome della rosa'])
         self.api.presta('111', self.gioco.id)
         self.assertEqual(titoli('disponibili'), ['Il nome della rosa', 'Carcassonne'])
+        # A caso: gli stessi beni dei filtri, nello stesso ordine per lo
+        # stesso seme.
+        casuale = lambda seme: [b['titolo'] for b in self.api.catalogo(filtri, ordine='casuale', seme=seme)['beni']]
+        self.assertEqual(sorted(casuale(7)), ['Carcassonne', 'Il nome della rosa'])
+        self.assertEqual(casuale(7), casuale(7))
         # Un ordine sconosciuto non passa: si torna al predefinito.
         self.assertEqual(len(titoli('name; drop table x')), 2)
 
