@@ -79,7 +79,8 @@ class CroceviaMiniappTessera(models.AbstractModel):
         # Il riepilogo delle spese dell'anno: per tipo, quante e quanto.
         spese = {}
         for r in ricevute.filtered(lambda r: r.data and r.data.year == anno):
-            voce = spese.setdefault(r.tipo, {'tipo': tipi.get(r.tipo, r.tipo), 'quante': 0, 'totale': 0.0})
+            voce = spese.setdefault(r.tipo, {'tipo': tipi.get(r.tipo, r.tipo), 'codice': r.tipo,
+                                             'quante': 0, 'totale': 0.0})
             voce['quante'] += 1
             voce['totale'] += r.importo
         return {
