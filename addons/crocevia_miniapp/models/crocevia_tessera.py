@@ -44,13 +44,16 @@ class CroceviaRichiestaIscrizione(models.Model):
 class CroceviaMiniappTessera(models.AbstractModel):
     _inherit = 'crocevia.miniapp'
 
-    def _quota_tesseramento(self):
+    def _importo(self, chiave, standard):
         valore = self.env['ir.config_parameter'].sudo().get_param(
-            'crocevia_tesseramento.importo_tesseramento', '10')
+            'crocevia_tesseramento.' + chiave, str(standard))
         try:
             return float(valore)
         except (TypeError, ValueError):
-            return 10.0
+            return float(standard)
+
+    def _quota_tesseramento(self):
+        return self._importo('importo_tesseramento', 10)
 
     # ---------------- la propria tessera ----------------
 
@@ -73,6 +76,12 @@ class CroceviaMiniappTessera(models.AbstractModel):
         tipi = dict(Ricevuta._fields['tipo'].selection)
         metodi = dict(Ricevuta._fields['metodo'].selection)
         categorie = dict(socio._fields['categoria_socio'].selection)
+        # Il riepilogo delle spese dell'anno: per tipo, quante e quanto.
+        spese = {}
+        for r in ricevute.filtered(lambda r: r.data and r.data.year == anno):
+            voce = spese.setdefault(r.tipo, {'tipo': tipi.get(r.tipo, r.tipo), 'quante': 0, 'totale': 0.0})
+            voce['quante'] += 1
+            voce['totale'] += r.importo
         return {
             'nome': socio.name,
             'numero_socio': socio.numero_socio or False,
@@ -83,6 +92,14 @@ class CroceviaMiniappTessera(models.AbstractModel):
             'mensilita': sorted({r.mese_riferimento for r in dell_anno
                                  if r.tipo in ('tesseramento', 'contributo_mensile')}),
             'quota': self._quota_tesseramento(),
+            'spese': sorted(spese.values(), key=lambda v: -v['totale']),
+            # Quanto costa ogni voce che si potra' pagare dall'app.
+            'importi': {
+                'obolo_giornaliero': self._importo('importo_obolo', 2),
+                'contributo_mensile': self._importo('importo_mensile', 10),
+                'contributo_evento': self._importo('importo_evento_default', 3),
+                'tesseramento': self._quota_tesseramento(),
+            },
             'ricevute': [{
                 'id': r.id,
                 'numero': r.numero,
