@@ -396,3 +396,50 @@ class TestMiniapp(TransactionCase):
         self.assertTrue(anonima.exists())
         self.assertTrue(anonima.name.startswith('Ex utente app'))
         self.assertEqual(Partner.browse(recente['id']).name, 'Appena Respintə')
+
+    def _valori_iscrizione(self, **altro):
+        valori = {
+            'nome': 'Giulia', 'cognome': 'Nuova', 'data_nascita': '1995-04-12',
+            'luogo_nascita': 'Barletta', 'codice_fiscale': 'nvogli95d52a669x',
+            'email': 'giulia@example.org', 'indirizzo': 'Via Prova 1',
+            'cap': '76121', 'citta': 'Barletta', 'provincia': 'bt',
+        }
+        valori.update(altro)
+        return valori
+
+    def test_tesseramento_dalla_miniapp(self):
+        self.assertFalse(self.api.stato_iscrizione('4444')['richiesta'])
+        with self.assertRaises(UserError):
+            self.api.richiedi_iscrizione('4444', self._valori_iscrizione(codice_fiscale='corto'))
+        r = self.api.richiedi_iscrizione('4444', self._valori_iscrizione())
+        # Una sola richiesta aperta per Telegram.
+        self.assertEqual(self.api.richiedi_iscrizione('4444', self._valori_iscrizione())['id'], r['id'])
+        self.assertEqual(self.api.stato_iscrizione('4444')['richiesta']['id'], r['id'])
+        # Chi ha gia' una scheda non chiede il tesseramento.
+        with self.assertRaises(UserError):
+            self.api.richiedi_iscrizione('111', self._valori_iscrizione())
+        socio = self.api.approva_iscrizione(r['id'], 'contanti', 'Direttivo')
+        self.assertTrue(socio['numero_socio'])
+        self.assertEqual(self.api.socio_da_telegram('4444')['id'], socio['id'])
+        tessera = self.api.tessera('4444')
+        self.assertTrue(tessera['tesserato'])
+        self.assertEqual(len(tessera['ricevute']), 1)
+        self.assertEqual(tessera['mensilita'], [fields.Date.context_today(self.mario).strftime('%Y-%m')])
+        with self.assertRaises(UserError):
+            self.api.approva_iscrizione(r['id'], 'contanti', 'Direttivo')
+        self.assertNotIn('4444', [s['telegram_id'] for s in self.api.da_rinnovare()])
+        self.assertIn('111', [s['telegram_id'] for s in self.api.da_rinnovare()])
+
+    def test_rifiuta_iscrizione(self):
+        r = self.api.richiedi_iscrizione('5555', self._valori_iscrizione())
+        self.assertEqual(self.api.rifiuta_iscrizione(r['id'], 'Direttivo')['telegram_id'], '5555')
+        self.assertFalse(self.api.stato_iscrizione('5555')['richiesta'])
+        self.assertFalse(self.api.socio_da_telegram('5555'))
+
+    def test_ricevuta_solo_propria(self):
+        Ricevuta = self.env['crocevia.ricevuta']
+        mia = Ricevuta.create({'partner_id': self.mario.id, 'data': fields.Date.today(),
+                               'tipo': 'obolo_giornaliero', 'importo': 2, 'metodo': 'contanti'})
+        with self.assertRaises(UserError):
+            self.api.ricevuta_pdf('222', mia.id)
+        self.assertEqual([x['id'] for x in self.api.tessera('111')['ricevute']], [mia.id])

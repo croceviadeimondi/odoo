@@ -13,7 +13,7 @@ from ..utils.epc_qr import costruisci_payload_epc, genera_qr_png_base64
 
 
 class ReportCroceviaRicevuta(models.AbstractModel):
-    _name = 'report.crocevia_tesseramento.report_crocevia_ricevuta_document'
+    _name = 'report.crocevia_tesseramento.report_crocevia_ricevuta'
     _description = "Report Ricevuta Crocevia"
 
     @api.model
