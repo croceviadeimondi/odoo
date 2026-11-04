@@ -105,6 +105,9 @@ class CroceviaMiniappTessera(models.AbstractModel):
                 'numero': r.numero,
                 'data': fields.Date.to_string(r.data),
                 'tipo': tipi.get(r.tipo, r.tipo),
+                # Il codice serve all'app per riconoscere cosa e' gia' pagato
+                # (l'obolo di oggi, per esempio); 'tipo' e' quello da mostrare.
+                'codice': r.tipo,
                 'importo': r.importo,
                 'metodo': metodi.get(r.metodo, r.metodo),
                 'mese': r.mese_riferimento or False,
