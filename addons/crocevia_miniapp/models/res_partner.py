@@ -41,6 +41,14 @@ class ResPartner(models.Model):
              "gia' senza spunta.",
     )
 
+    admin_tessere = fields.Boolean(
+        string="Gestisce le quote",
+        tracking=True,
+        help="Dalla miniapp vede le quote di tutti i soci, registra i "
+             "pagamenti fatti in sede e annulla le ricevute sbagliate. Chi "
+             "sta nel gruppo Telegram del direttivo lo e' gia' senza spunta.",
+    )
+
     _sql_constraints = [
         ('telegram_id_unico', 'unique(telegram_id)',
          "Questo Telegram e' gia' collegato a un'altra scheda."),
