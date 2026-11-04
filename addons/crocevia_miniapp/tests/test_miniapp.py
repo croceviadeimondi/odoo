@@ -424,6 +424,8 @@ class TestMiniapp(TransactionCase):
         tessera = self.api.tessera('4444')
         self.assertTrue(tessera['tesserato'])
         self.assertEqual(len(tessera['ricevute']), 1)
+        self.assertEqual(tessera['spese'][0]['quante'], 1)
+        self.assertEqual(tessera['importi']['tesseramento'], tessera['quota'])
         self.assertEqual(tessera['mensilita'], [fields.Date.context_today(self.mario).strftime('%Y-%m')])
         with self.assertRaises(UserError):
             self.api.approva_iscrizione(r['id'], 'contanti', 'Direttivo')
