@@ -148,7 +148,8 @@ class CroceviaMiniapp(models.AbstractModel):
         socio = self._socio(telegram_id)
         if not socio:
             return False
-        return dict(self._dati_socio(socio), admin=socio.admin_miniapp)
+        return dict(self._dati_socio(socio), admin=socio.admin_miniapp,
+                    admin_tessere=socio.admin_tessere)
 
     @api.model
     def informativa(self):

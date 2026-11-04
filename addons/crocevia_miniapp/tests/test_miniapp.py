@@ -445,3 +445,49 @@ class TestMiniapp(TransactionCase):
         with self.assertRaises(UserError):
             self.api.ricevuta_pdf('222', mia.id)
         self.assertEqual([x['id'] for x in self.api.tessera('111')['ricevute']], [mia.id])
+
+    def test_quote_dei_soci(self):
+        oggi = fields.Date.context_today(self.mario)
+        anno = oggi.year
+        mese = oggi.strftime('%Y-%m')
+        self.mario.admin_tessere = True
+        self.assertTrue(self.api.socio_da_telegram('111')['admin_tessere'])
+        esito = self.api.registra_pagamento(self.anna.id, {
+            'codice': 'contributo_mensile', 'metodo': 'satispay',
+            'data': fields.Date.to_string(oggi), 'mesi': [mese]}, 'Direttivo')
+        self.assertEqual(esito['telegram_id'], '222')
+        self.assertEqual(len(esito['ricevute']), 1)
+        # Lo stesso mese due volte no.
+        with self.assertRaises(UserError):
+            self.api.registra_pagamento(self.anna.id, {
+                'codice': 'contributo_mensile', 'metodo': 'contanti',
+                'data': fields.Date.to_string(oggi), 'mesi': [mese]}, 'Direttivo')
+        self.api.registra_pagamento(self.anna.id, {
+            'codice': 'tesseramento', 'metodo': 'contanti',
+            'data': fields.Date.to_string(oggi)}, 'Direttivo')
+        with self.assertRaises(UserError):
+            self.api.registra_pagamento(self.anna.id, {
+                'codice': 'tesseramento', 'metodo': 'contanti',
+                'data': fields.Date.to_string(oggi)}, 'Direttivo')
+        with self.assertRaises(UserError):
+            self.api.registra_pagamento(self.anna.id, {
+                'codice': 'contributo_evento', 'metodo': 'contanti',
+                'data': fields.Date.to_string(oggi), 'importo': 500}, 'Direttivo')
+        quote = {s['id']: s for s in self.api.quote_soci(anno)}
+        self.assertTrue(quote[self.anna.id]['tesserato'])
+        self.assertEqual(quote[self.anna.id]['mensilita'], [mese])
+        self.assertFalse(quote[self.mario.id]['tesserato'])
+        self.assertIn(self.senza_telegram.id, quote)
+        scheda = self.api.tessera_socio(self.anna.id, anno)
+        self.assertEqual(scheda['telegram_id'], '222')
+        self.assertEqual(len(scheda['ricevute']), 2)
+        # Annullata, la ricevuta sparisce da tessera e spese (il mese resta
+        # coperto dal tesseramento, che vale anche come prima mensilita').
+        annullata = self.api.annulla_ricevuta(esito['ricevute'][0]['id'], 'Direttivo')
+        self.assertEqual(annullata['socio'], 'Anna Bianchi')
+        with self.assertRaises(UserError):
+            self.api.annulla_ricevuta(esito['ricevute'][0]['id'], 'Direttivo')
+        self.assertEqual(len(self.api.tessera('222')['ricevute']), 1)
+        self.assertEqual(self.api.tessera_socio(self.anna.id, anno)['mensilita'], [mese])
+        self.assertTrue(self.env['crocevia.ricevuta'].with_context(active_test=False)
+                        .browse(esito['ricevute'][0]['id']).exists())
