@@ -16,4 +16,11 @@
         <field name="key">crocevia_miniapp.mesi_conservazione_respinti</field>
         <field name="value">6</field>
     </record>
+    <!-- 1: dalla miniapp prenota una stanza solo chi ha la ricevuta del
+         tesseramento dell'anno. Resta 0 finche' i tesseramenti non sono
+         tutti registrati in Odoo, se no si bloccano tutti. -->
+    <record id="param_prenota_solo_tesserati" model="ir.config_parameter">
+        <field name="key">crocevia_miniapp.prenota_solo_tesserati</field>
+        <field name="value">0</field>
+    </record>
 </odoo>
