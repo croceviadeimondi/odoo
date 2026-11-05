@@ -26,7 +26,7 @@ OBBLIGATORI = (
 )
 EMAIL_RE = re.compile(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
 CF_RE = re.compile(r'^[A-Z0-9]{16}$')
-METODI_APPROVAZIONE = ('contanti', 'satispay', 'bonifico')
+METODI_APPROVAZIONE = ('contanti', 'satispay', 'paypal', 'bonifico', 'stripe')
 
 
 class CroceviaRichiestaIscrizione(models.Model):
@@ -109,6 +109,7 @@ class CroceviaMiniappTessera(models.AbstractModel):
                 'importo': r.importo,
                 'metodo': metodi.get(r.metodo, r.metodo),
                 'mese': r.mese_riferimento or False,
+                'evento': r.evento or False,
             } for r in ricevute],
         }
 
@@ -119,6 +120,26 @@ class CroceviaMiniappTessera(models.AbstractModel):
             'contributo_evento': self._importo('importo_evento_default', 3),
             'tesseramento': self._quota_tesseramento(),
         }
+
+    def _pdf_ricevute(self, ricevute):
+        pdf, _tipo = self.env['ir.actions.report'].sudo()._render_qweb_pdf(
+            'crocevia_tesseramento.action_report_crocevia_ricevuta', ricevute.ids)
+        return base64.b64encode(pdf).decode()
+
+    @api.model
+    def ricevute_pdf(self, telegram_id, ricevuta_ids):
+        """Piu' ricevute proprie in un PDF solo, una per pagina, nell'ordine
+        in cui sono chieste."""
+        self._controlla_accesso()
+        socio = self._socio_obbligatorio(telegram_id)
+        ids = list(dict.fromkeys(int(i) for i in ricevuta_ids))
+        ricevute = self.env['crocevia.ricevuta'].sudo().browse(ids).exists()
+        if not ricevute or len(ricevute) != len(ids) or ricevute.partner_id != socio:
+            raise UserError(_("Fra queste c’è una ricevuta che non è tua."))
+        anni = sorted({r.data.year for r in ricevute if r.data})
+        periodo = f"{anni[0]}-{anni[-1]}" if len(anni) > 1 else (str(anni[0]) if anni else '')
+        return {'nome_file': f"ricevute-{periodo}.pdf" if periodo else "ricevute.pdf",
+                'pdf': self._pdf_ricevute(ricevute)}
 
     @api.model
     def ricevuta_pdf(self, telegram_id, ricevuta_id):
@@ -262,28 +283,55 @@ class CroceviaMiniappTessera(models.AbstractModel):
         self._controlla_accesso()
         anno = int(anno)
         Ricevuta = self.env['crocevia.ricevuta'].sudo()
-        ricevute = Ricevuta.search([
+        ricevute = Ricevuta.search(['|',
             ('mese_riferimento', '=like', f'{anno}-%'),
-            ('tipo', 'in', ('tesseramento', 'contributo_mensile')),
+            '&', ('data', '>=', f'{anno}-01-01'), ('data', '<=', f'{anno}-12-31'),
         ])
         soci = self.env['res.partner'].sudo().search([
             ('is_socio', '=', True), ('stato_socio', '=', 'attivo'),
         ]) | ricevute.mapped('partner_id')
         per_socio = {}
         for r in ricevute:
-            dati = per_socio.setdefault(r.partner_id.id, {'mesi': set(), 'tesserato': False})
-            dati['mesi'].add(r.mese_riferimento)
-            dati['tesserato'] |= r.tipo == 'tesseramento'
+            dati = per_socio.setdefault(r.partner_id.id, {
+                'mesi': set(), 'tesserato': False, 'oboli': 0, 'ultimo': False})
+            mese_dell_anno = (r.mese_riferimento or '').startswith(str(anno))
+            if r.tipo in ('tesseramento', 'contributo_mensile') and mese_dell_anno:
+                dati['mesi'].add(r.mese_riferimento)
+                dati['tesserato'] |= r.tipo == 'tesseramento'
+            if r.tipo == 'obolo_giornaliero' and r.data and r.data.year == anno:
+                dati['oboli'] += 1
+            if r.data and (not dati['ultimo'] or r.data > dati['ultimo']):
+                dati['ultimo'] = r.data
         categorie = dict(self.env['res.partner']._fields['categoria_socio'].selection)
+        vuoto = {'mesi': (), 'tesserato': False, 'oboli': 0, 'ultimo': False}
         return [{
             'id': s.id,
             'nome': s.name,
             'numero_socio': s.numero_socio or False,
             'categoria': categorie.get(s.categoria_socio, '') or '',
-            'tesserato': per_socio.get(s.id, {}).get('tesserato', False),
-            'mensilita': sorted(per_socio.get(s.id, {}).get('mesi', ())),
+            'tesserato': per_socio.get(s.id, vuoto)['tesserato'],
+            'mensilita': sorted(per_socio.get(s.id, vuoto)['mesi']),
+            'oboli': per_socio.get(s.id, vuoto)['oboli'],
+            'ultimo_pagamento': fields.Date.to_string(per_socio.get(s.id, vuoto)['ultimo']) or False,
             'telegram_id': s.telegram_id or False,
         } for s in soci.sorted(lambda s: (s.name or '').lower())]
+
+    @api.model
+    def pagamenti(self, da, a):
+        """Le ricevute fra due date, di tutti, dalla piu' recente. Le
+        annullate (archiviate) non ci sono."""
+        self._controlla_accesso()
+        Ricevuta = self.env['crocevia.ricevuta'].sudo()
+        ricevute = Ricevuta.search([('data', '>=', da), ('data', '<=', a)],
+                                   order='data desc, id desc', limit=5000)
+        tipi = dict(Ricevuta._fields['tipo'].selection)
+        return [{
+            'id': r.id, 'numero': r.numero, 'data': fields.Date.to_string(r.data),
+            'partner_id': r.partner_id.id, 'socio': r.partner_id.name,
+            'codice': r.tipo, 'tipo': tipi.get(r.tipo, r.tipo), 'importo': r.importo,
+            'mese': r.mese_riferimento or False, 'metodo': r.metodo,
+            'evento': r.evento or False,
+        } for r in ricevute]
 
     def _scheda_socio(self, partner_id):
         socio = self.env['res.partner'].sudo().browse(int(partner_id)).exists()
@@ -333,6 +381,14 @@ class CroceviaMiniappTessera(models.AbstractModel):
             if doppi:
                 raise UserError(_("Risulta già pagato: %s.", ', '.join(doppi)))
             righe = [{'mese_riferimento': m, 'importo': importi[codice]} for m in mesi]
+            # Chi non ha ancora la tessera dell'anno: la prima mensilita'
+            # di quell'anno e' il tesseramento, che vale anche come mese.
+            tesserati = {(r.mese_riferimento or '')[:4] for r in gia if r.tipo == 'tesseramento'}
+            for riga in righe:
+                anno_mese = riga['mese_riferimento'][:4]
+                if anno_mese not in tesserati:
+                    riga.update(tipo='tesseramento', importo=importi['tesseramento'])
+                    tesserati.add(anno_mese)
         elif codice == 'tesseramento':
             anno = str(data.year)
             if gia.filtered(lambda r: r.tipo == 'tesseramento'
@@ -347,8 +403,9 @@ class CroceviaMiniappTessera(models.AbstractModel):
             importo = float(valori.get('importo') or 0)
             if not 0 < importo <= 50:
                 raise UserError(_("L’importo dell’evento non sembra giusto."))
-            righe = [{'importo': round(importo, 2)}]
-        ricevute = Ricevuta.create([dict(r, partner_id=socio.id, data=data, tipo=codice,
+            righe = [{'importo': round(importo, 2),
+                      'evento': str(valori.get('evento') or '').strip()[:120] or False}]
+        ricevute = Ricevuta.create([dict({'tipo': codice}, **r, partner_id=socio.id, data=data,
                                          metodo=metodo) for r in righe])
         for r in ricevute:
             r.message_post(body=_("Registrata dalla miniapp da %s.", da_chi),
@@ -359,7 +416,8 @@ class CroceviaMiniappTessera(models.AbstractModel):
             'telegram_id': socio.telegram_id or False,
             'ricevute': [{'id': r.id, 'numero': r.numero, 'tipo': tipi.get(r.tipo, r.tipo),
                           'importo': r.importo, 'data': fields.Date.to_string(r.data),
-                          'mese': r.mese_riferimento or False} for r in ricevute],
+                          'mese': r.mese_riferimento or False,
+                          'evento': r.evento or False} for r in ricevute],
         }
 
     @api.model

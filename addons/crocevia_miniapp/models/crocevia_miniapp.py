@@ -148,8 +148,16 @@ class CroceviaMiniapp(models.AbstractModel):
         socio = self._socio(telegram_id)
         if not socio:
             return False
-        return dict(self._dati_socio(socio), admin=socio.admin_miniapp,
+        dati = dict(self._dati_socio(socio), admin=socio.admin_miniapp,
                     admin_tessere=socio.admin_tessere)
+        # Il server della miniapp blocca le prenotazioni solo se riceve
+        # tesserato: False. Finche' il parametro e' spento non lo riceve.
+        if self._param_int('prenota_solo_tesserati', 0):
+            anno = str(fields.Date.context_today(self).year)
+            dati['tesserato'] = bool(self.env['crocevia.ricevuta'].sudo().search_count([
+                ('partner_id', '=', socio.id), ('tipo', '=', 'tesseramento'),
+                ('mese_riferimento', '=like', anno + '-%')]))
+        return dati
 
     @api.model
     def informativa(self):
@@ -659,6 +667,8 @@ class CroceviaMiniapp(models.AbstractModel):
             dati = self._dati_prestito(p)
             prevista = p.data_restituzione_prevista
             dati['giorni_ritardo'] = (oggi - prevista).days if prevista and prevista < oggi else 0
+            # Per aprire la chat con chi ce l'ha: il server non lo passa alla pagina.
+            dati['telegram_id'] = p.partner_id.telegram_id or False
             risultato.append(dati)
         return risultato
 
