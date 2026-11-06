@@ -518,3 +518,9 @@ class TestMiniapp(TransactionCase):
         with self.assertRaises(UserError):
             self.api.ricevute_pdf('111', mie.ids + altrui.ids)
         self.assertEqual(self.api.ricevute_pdf('111', mie.ids)['nome_file'], f'ricevute-{oggi.year}.pdf')
+
+    def test_responsabili_biblioteca(self):
+        self.assertEqual(self.api.responsabili_biblioteca(), [])
+        self.anna.admin_miniapp = True
+        self.senza_telegram.admin_miniapp = True
+        self.assertEqual([r['telegram_id'] for r in self.api.responsabili_biblioteca()], ['222'])
