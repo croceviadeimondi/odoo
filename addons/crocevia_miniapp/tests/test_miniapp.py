@@ -1,3 +1,4 @@
+import base64
 from datetime import timedelta
 
 from odoo import fields
@@ -524,3 +525,42 @@ class TestMiniapp(TransactionCase):
         self.anna.admin_miniapp = True
         self.senza_telegram.admin_miniapp = True
         self.assertEqual([r['telegram_id'] for r in self.api.responsabili_biblioteca()], ['222'])
+
+    def test_task_dello_staff(self):
+        progetto = self.env['project.project'].create({'name': 'Sede'})
+        domani = fields.Date.context_today(self.mario) + timedelta(days=1)
+        esito = self.api.task_salva('111', {
+            'nome': 'Comprare le lampadine', 'progetto_id': progetto.id,
+            'scadenza': fields.Date.to_string(domani), 'persone': [self.anna.id],
+            'etichette_nuove': ['Acquisti'], 'checklist': ['Misurare gli attacchi'],
+            'ripete': 'mese'}, da_chi='Mario')
+        task = esito['task']
+        self.assertEqual(task['scadenza'], fields.Date.to_string(domani))
+        self.assertEqual([a['telegram_id'] for a in esito['avvisare']], ['222'])
+        self.assertEqual(task['etichette'][0]['nome'], 'Acquisti')
+        self.assertEqual(task['ripete'], 'mese')
+        self.assertFalse(task['mia'])
+        self.assertTrue(self.api.task_prendo('111', task['id'])['mia'])
+        voci = self.api.task_voce(task['id'], 'aggiungi', testo='Comprarle')
+        self.assertEqual(len(voci), 2)
+        self.assertTrue(self.api.task_voce(task['id'], 'spunta', voce_id=voci[0]['id'])[0]['fatto'])
+        self.assertEqual(self.api.task_commenta('111', task['id'], 'Prese da Leroy')['avvisare'][0]['telegram_id'], '222')
+        foto = base64.b64encode(b'\xff\xd8finta').decode()
+        self.api.task_foto('111', task['id'], foto)
+        dettaglio = self.api.task_dettaglio(task['id'], '111')
+        self.assertEqual(len(dettaglio['immagini']), 1)
+        self.assertIn('Prese da Leroy', [m['testo'] for m in dettaglio['messaggi']])
+        self.assertEqual(dettaglio['voci'], {'fatte': 1, 'tutte': 2})
+        self.assertEqual([t['nome'] for t in self.api.task_promemoria()], ['Comprare le lampadine'])
+        self.assertIn('Comprare le lampadine', [t['nome'] for t in self.api.task_settimana()])
+        # Chiusa, la prossima del mese nasce da sola.
+        chiusa = self.api.task_stato('111', task['id'], True, 'Mario')
+        self.assertTrue(chiusa['task']['fatta'])
+        self.assertTrue(chiusa['prossima'])
+        self.assertNotEqual(chiusa['prossima']['scadenza'], task['scadenza'])
+        aperte = [t['id'] for t in self.api.task_elenco('111')]
+        self.assertNotIn(task['id'], aperte)
+        self.assertIn(chiusa['prossima']['id'], aperte)
+        self.assertIn(task['id'], [t['id'] for t in self.api.task_elenco('111', 7)])
+        with self.assertRaises(UserError):
+            self.api.task_salva('111', {'nome': 'Senza progetto'})
