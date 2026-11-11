@@ -5,3 +5,4 @@ access_miniapp_bene_sistema,crocevia.bene.sistema miniapp,crocevia_inventario.mo
 access_miniapp_prestito,crocevia.prestito miniapp,crocevia_inventario.model_crocevia_prestito,group_crocevia_miniapp,1,1,1,0
 access_miniapp_sede,crocevia.sede miniapp ro,crocevia_inventario.model_crocevia_sede,group_crocevia_miniapp,1,0,0,0
 access_miniapp_partner,res.partner miniapp,base.model_res_partner,group_crocevia_miniapp,1,1,1,0
+access_task_voce_utente,crocevia.task.voce utente,model_crocevia_task_voce,base.group_user,1,1,1,1

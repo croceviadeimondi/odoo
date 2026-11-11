@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Le task dalla miniapp: chi se ne occupa (schede socio, senza utente
+         Odoo), la checklist e l'attivita' del calendario collegata. -->
+    <record id="view_task_form_inherit_miniapp" model="ir.ui.view">
+        <field name="name">project.task.form.inherit.crocevia.miniapp</field>
+        <field name="model">project.task</field>
+        <field name="inherit_id" ref="project.view_task_form2"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_ids']" position="after">
+                <field name="miniapp_persone" widget="many2many_tags"/>
+            </xpath>
+            <xpath expr="//notebook" position="inside">
+                <page string="Miniapp" name="miniapp">
+                    <field name="miniapp_voci">
+                        <list editable="bottom">
+                            <field name="sequence" widget="handle"/>
+                            <field name="name"/>
+                            <field name="fatto"/>
+                        </list>
+                    </field>
+                    <group>
+                        <field name="miniapp_evento_titolo"/>
+                        <field name="miniapp_evento_inizio"/>
+                        <field name="miniapp_evento_sede"/>
+                        <field name="miniapp_creata_da"/>
+                    </group>
+                </page>
+            </xpath>
+        </field>
+    </record>
+</odoo>
