@@ -525,6 +525,7 @@ class TestMiniapp(TransactionCase):
         self.anna.admin_miniapp = True
         self.senza_telegram.admin_miniapp = True
         self.assertEqual([r['telegram_id'] for r in self.api.responsabili_biblioteca()], ['222'])
+        self.assertEqual(len(self.api.responsabili_biblioteca(True)), 2)
 
     def test_task_dello_staff(self):
         progetto = self.env['project.project'].create({'name': 'Sede'})
