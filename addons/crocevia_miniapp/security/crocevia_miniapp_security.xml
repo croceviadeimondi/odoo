@@ -24,5 +24,14 @@
             <field name="email">miniapp@croceviadeimondi.org</field>
             <field name="groups_id" eval="[(6, 0, [ref('group_crocevia_miniapp')])]"/>
         </record>
+
+        <!-- Utente del foglio Google dell'inventario: portale, nessun
+             accesso ai modelli. Chiama solo crocevia.foglio.elenco, che
+             controlla che sia lui. La chiave API si crea a mano (README). -->
+        <record id="user_foglio" model="res.users">
+            <field name="name">Foglio inventario</field>
+            <field name="login">foglio_inventario</field>
+            <field name="groups_id" eval="[(6, 0, [ref('base.group_portal')])]"/>
+        </record>
     </data>
 </odoo>

@@ -5,3 +5,4 @@ from . import crocevia_miniapp
 from . import crocevia_tessera
 from . import crocevia_ricevuta
 from . import crocevia_task
+from . import crocevia_foglio
