@@ -673,15 +673,17 @@ class CroceviaMiniapp(models.AbstractModel):
         return risultato
 
     @api.model
-    def responsabili_biblioteca(self):
+    def responsabili_biblioteca(self, anche_senza_telegram=False):
         """Chi amministra la biblioteca e ha Telegram collegato: a loro, in
-        privato, arrivano gli avvisi di prestiti e restituzioni."""
+        privato, arrivano gli avvisi di prestiti e restituzioni. Con
+        `anche_senza_telegram` anche chi non l'ha ancora collegato, per
+        l'elenco delle referenti nell'aiuto dell'app."""
         self._controlla_accesso()
-        persone = self.env['res.partner'].search([
-            ('admin_miniapp', '=', True), ('telegram_id', '!=', False),
-            ('is_socio', '=', True), ('stato_socio', '!=', 'cessato'),
-        ])
-        return [{'telegram_id': p.telegram_id, 'nome': p.name} for p in persone]
+        dominio = [('admin_miniapp', '=', True), ('is_socio', '=', True), ('stato_socio', '!=', 'cessato')]
+        if not anche_senza_telegram:
+            dominio.append(('telegram_id', '!=', False))
+        persone = self.env['res.partner'].search(dominio, order='name')
+        return [{'telegram_id': p.telegram_id or False, 'nome': p.name} for p in persone]
 
     @api.model
     def chiudi_prestito(self, prestito_id, da_chi):
