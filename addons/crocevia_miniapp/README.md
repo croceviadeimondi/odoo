@@ -81,6 +81,30 @@ bene), con chi l'ha fatta.
    Va in `odoo.json` del server del calendario, non nel repo. Si revoca
    dalla scheda dell'utente, Sicurezza account.
 
+## Foglio Google dell'inventario (sola lettura)
+
+Il foglio della biblioteca mostra una copia dell'inventario che si
+aggiorna da sola. Si modifica solo in Odoo: in quella scheda le modifiche
+fatte a mano spariscono al giro dopo.
+
+- Utente **Foglio inventario** (`foglio_inventario`): utente portale,
+  nessun accesso ai modelli. Puo' solo chiamare `crocevia.foglio.elenco`,
+  che restituisce le colonne del foglio: sede, titolo, autore, editore,
+  anno, genere, ISBN, codice, stato, rientro previsto, ID. Chi ha il bene
+  in prestito non c'e'. La chiave va nelle proprieta' dello script, che
+  vede chiunque possa modificare il foglio: per questo l'utente non puo'
+  fare altro.
+- Script: `tools/foglio_inventario.gs`, con le istruzioni in testa. Un
+  trigger lo esegue ogni 30 minuti.
+
+La chiave si crea come quella della miniapp:
+
+```python
+u = env.ref('crocevia_miniapp.user_foglio')
+print(env['res.users.apikeys'].with_user(u).sudo()._generate(None, 'foglio biblioteca', None))
+env.cr.commit()
+```
+
 ## Test
 
 ```sh
